@@ -1,0 +1,18 @@
+-- Speed camera POI (Phase 1 schema stub)
+CREATE TABLE speed_camera (
+    id TEXT PRIMARY KEY,
+    latitude REAL NOT NULL,
+    longitude REAL NOT NULL,
+    road_name TEXT,
+    road_direction REAL,
+    speed_limit INTEGER NOT NULL,
+    camera_type TEXT NOT NULL,
+    section_length INTEGER
+);
+
+CREATE INDEX idx_camera_location ON speed_camera(latitude, longitude);
+
+CREATE TABLE settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);

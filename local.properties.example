@@ -1,0 +1,5 @@
+# Copy to local.properties (gitignored) and adjust paths.
+sdk.dir=/Users/YOUR_USER/Library/Android/sdk
+
+# Optional: JDK 17 (if not default)
+# org.gradle.java.home=/Users/YOUR_USER/.jdks/jdk-17.0.20+8/Contents/Home

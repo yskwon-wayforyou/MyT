@@ -1,0 +1,67 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+**/build/
+
+# Kotlin
+.kotlin/
+*.kotlin_module
+*.klib
+
+# Android
+*.apk
+*.ap_
+*.aab
+*.dex
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+*.iml
+.idea/
+*.hprof
+
+# iOS / Xcode
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+**/xcuserdata/
+*.xcuserstate
+*.ipa
+*.dSYM.zip
+*.dSYM
+DerivedData/
+Pods/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.moved-aside
+*.hmap
+*.ipa
+*.xcuserstate
+iosApp/build/
+
+# Secrets
+*.keystore
+*.jks
+.env
+.env.*
+secrets/
+*.pem
+tesla.local.properties
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
