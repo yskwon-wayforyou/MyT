@@ -39,33 +39,36 @@ fun TireGrid(
     modifier: Modifier = Modifier,
     compact: Boolean = false,
     usePsi: Boolean = true,
+    embedded: Boolean = false,
 ) {
     val colors = GaugeTheme.colors
-    TeslaCard(modifier = modifier.fillMaxWidth(), accent = Color(0xFF3D9EFF)) {
+    val body: @Composable () -> Unit = {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(if (compact) 10.dp else 14.dp),
+                .padding(if (embedded) 4.dp else if (compact) 10.dp else 14.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(if (embedded) 4.dp else 8.dp),
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                Icon(
-                    imageVector = ClusterIcons.tire,
-                    contentDescription = null,
-                    tint = Color(0xFF3D9EFF),
-                    modifier = Modifier.height(18.dp).width(18.dp),
-                )
-                Text(
-                    "타이어 · ${UnitConverter.pressureUnitLabel(usePsi)}",
-                    color = colors.textSecondary,
-                    fontSize = 13.sp,
-                    letterSpacing = 1.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
+            if (!embedded) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Icon(
+                        imageVector = ClusterIcons.tire,
+                        contentDescription = null,
+                        tint = Color(0xFF3D9EFF),
+                        modifier = Modifier.height(18.dp).width(18.dp),
+                    )
+                    Text(
+                        "타이어 · ${UnitConverter.pressureUnitLabel(usePsi)}",
+                        color = colors.textSecondary,
+                        fontSize = 13.sp,
+                        letterSpacing = 1.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
             }
             BoxWithConstraints(
                 modifier = Modifier
@@ -117,6 +120,11 @@ fun TireGrid(
                 )
             }
         }
+    }
+    if (embedded) {
+        Box(modifier.fillMaxWidth()) { body() }
+    } else {
+        TeslaCard(modifier = modifier.fillMaxWidth(), accent = Color(0xFF3D9EFF)) { body() }
     }
 }
 

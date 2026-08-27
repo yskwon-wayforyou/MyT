@@ -1,5 +1,7 @@
 package com.myt.ui.gauge
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -7,11 +9,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -20,7 +24,6 @@ import com.myt.domain.model.GaugeDisplayPrefs
 import com.myt.domain.model.GaugeField
 import com.myt.domain.model.GaugeState
 import com.myt.ui.theme.GaugeTheme
-import com.myt.ui.theme.TeslaCard
 import com.myt.ui.theme.TeslaGlassPanel
 
 @Composable
@@ -39,12 +42,12 @@ fun VehicleStatusGrid(
     TeslaGlassPanel(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = if (compact) 8.dp else 12.dp, vertical = if (compact) 4.dp else 8.dp),
+            .padding(horizontal = if (compact) 4.dp else 8.dp, vertical = if (compact) 2.dp else 4.dp),
         accent = Color(0xFF64D2FF),
     ) {
         Column(
-            modifier = Modifier.padding(if (compact) 8.dp else 12.dp),
-            verticalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 8.dp),
+            modifier = Modifier.padding(if (compact) 6.dp else 10.dp),
+            verticalArrangement = Arrangement.spacedBy(if (compact) 4.dp else 6.dp),
         ) {
             Text(
                 "차량 상태",
@@ -86,7 +89,13 @@ private fun StatusTileCard(
     modifier: Modifier = Modifier,
 ) {
     val colors = GaugeTheme.colors
-    TeslaCard(modifier = modifier, accent = tile.accent) {
+    // Flat tile inside outer glass — avoids double card borders on phone.
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(colors.surfaceHigh.copy(alpha = 0.72f))
+            .border(1.dp, tile.accent.copy(alpha = 0.28f), RoundedCornerShape(10.dp)),
+    ) {
         Row(
             modifier = Modifier.padding(
                 horizontal = if (compact) 6.dp else 8.dp,
@@ -106,13 +115,13 @@ private fun StatusTileCard(
                 Text(
                     tile.label,
                     color = colors.textSecondary,
-                    fontSize = if (compact) 9.sp else 10.sp,
+                    fontSize = if (compact) 10.sp else 11.sp,
                     letterSpacing = 0.4.sp,
                 )
                 Text(
                     tile.value,
                     color = tile.accent,
-                    fontSize = if (compact) 14.sp else 18.sp,
+                    fontSize = if (compact) 15.sp else 18.sp,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(top = 1.dp),
                 )

@@ -27,16 +27,18 @@ fun GMeter(
     latAccelG: Float,
     modifier: Modifier = Modifier,
     compact: Boolean = false,
+    embedded: Boolean = false,
 ) {
     val colors = GaugeTheme.colors
     val dialHeight = if (compact) 120.dp else 150.dp
-
-    TeslaCard(modifier = modifier.fillMaxWidth(), accent = Color(0xFFBF5AF2)) {
+    val body: @Composable () -> Unit = {
         Column(
-            modifier = Modifier.padding(if (compact) 10.dp else 14.dp),
+            modifier = Modifier.padding(if (embedded) 4.dp else if (compact) 10.dp else 14.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text("G-METER", color = colors.textSecondary, fontSize = 11.sp, letterSpacing = 1.sp)
+            if (!embedded) {
+                Text("G-METER", color = colors.textSecondary, fontSize = 11.sp, letterSpacing = 1.sp)
+            }
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -63,9 +65,14 @@ fun GMeter(
             Text(
                 "L ${"%.2f".format(latAccelG)} · Lg ${"%.2f".format(longAccelG)}",
                 color = colors.textPrimary,
-                fontSize = 11.sp,
+                fontSize = if (embedded) 13.sp else 11.sp,
                 fontWeight = FontWeight.Medium,
             )
         }
+    }
+    if (embedded) {
+        Box(modifier.fillMaxWidth()) { body() }
+    } else {
+        TeslaCard(modifier = modifier.fillMaxWidth(), accent = Color(0xFFBF5AF2)) { body() }
     }
 }

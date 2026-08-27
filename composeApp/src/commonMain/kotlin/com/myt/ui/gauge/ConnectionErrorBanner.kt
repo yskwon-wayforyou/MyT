@@ -50,7 +50,10 @@ fun ConnectionErrorBanner(
         ConnectionErrorKind.None -> return
     }
 
-    TeslaGlassPanel(modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp), accent = accent) {
+    TeslaGlassPanel(
+        modifier = modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp),
+        accent = accent,
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()

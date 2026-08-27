@@ -26,7 +26,7 @@ fun DriveSafetyBanner(
     if (!visible) return
     val colors = GaugeTheme.colors
     TeslaGlassPanel(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+        modifier = modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp),
         accent = colors.accentBlue,
     ) {
         Row(

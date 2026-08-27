@@ -231,43 +231,30 @@ fun GaugeSinglePaneLayout(
                 .navigationBarsPadding(),
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
-                StatusBar(
-                    state = state,
-                    quotaSnapshot = quotaSnapshot,
-                    onUsageClick = onUsageClick,
-                    showUsageChip = false,
-                )
                 ConnectionErrorBanner(kind = errorKind, onRetry = onRetry, onDismissHome = onHome)
                 DriveSafetyBanner(
                     visible = showDriveSafetyBanner,
                     onAcknowledge = onAcknowledgeDriveSafety,
                 )
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    ClusterDriveHome(
-                        state = state,
-                        useKmh = useKmh,
-                        showSpeed = prefs.showsOnDriveHome(GaugeField.Speed) && !parked,
-                        showGear = prefs.showsOnDriveHome(GaugeField.Gear),
-                        showTires = prefs.showsOnDriveHome(GaugeField.Tires),
-                        chargingMode = charging,
-                        usePsi = prefs.usePsi(),
-                        alert = alert,
-                        onVoiceNav = onVoiceNav,
-                        onHistory = onHistory,
-                        onMore = onMore,
-                        onExpandVehicle = onExpandVehicle,
-                        onRequestFreshData = onRequestFreshData,
-                        mapDisplayLatitude = mapDisplayLatitude,
-                        mapDisplayLongitude = mapDisplayLongitude,
-                        mapMarkers = mapMarkers,
-                    )
-                }
+                ClusterDriveHome(
+                    state = state,
+                    useKmh = useKmh,
+                    showSpeed = prefs.showsOnDriveHome(GaugeField.Speed) && !parked,
+                    showGear = prefs.showsOnDriveHome(GaugeField.Gear),
+                    showTires = prefs.showsOnDriveHome(GaugeField.Tires),
+                    chargingMode = charging,
+                    usePsi = prefs.usePsi(),
+                    alert = alert,
+                    onVoiceNav = onVoiceNav,
+                    onHistory = onHistory,
+                    onMore = onMore,
+                    onExpandVehicle = onExpandVehicle,
+                    onRequestFreshData = onRequestFreshData,
+                    mapDisplayLatitude = mapDisplayLatitude,
+                    mapDisplayLongitude = mapDisplayLongitude,
+                    mapMarkers = mapMarkers,
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                )
             }
             SimulationTestBannerOverlay(
                 isSimulated = state.isSimulated,
@@ -313,13 +300,6 @@ fun GaugeLandscapeLayout(
                 .navigationBarsPadding(),
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
-                StatusBar(
-                    state = state,
-                    compact = true,
-                    quotaSnapshot = quotaSnapshot,
-                    onUsageClick = onUsageClick,
-                    showUsageChip = false,
-                )
                 ConnectionErrorBanner(kind = errorKind, onRetry = onRetry, onDismissHome = onHome)
                 DriveSafetyBanner(
                     visible = showDriveSafetyBanner,

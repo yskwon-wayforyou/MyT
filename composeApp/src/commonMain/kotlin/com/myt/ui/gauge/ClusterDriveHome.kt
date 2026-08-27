@@ -101,8 +101,8 @@ fun ClusterDriveHome(
                     radius = 1400f,
                 ),
             )
-            .padding(horizontal = 10.dp, vertical = 6.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+            .padding(horizontal = 4.dp, vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         CompactStatusBar(
             state = state,
@@ -118,7 +118,7 @@ fun ClusterDriveHome(
             if (landscape) {
                 Row(
                     modifier = Modifier.fillMaxSize(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
                         PrimaryDriveGauge(
@@ -152,7 +152,7 @@ fun ClusterDriveHome(
             } else {
                 Column(
                     modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     Box(modifier = Modifier.weight(0.48f).fillMaxWidth()) {
                         PrimaryDriveGauge(
@@ -203,34 +203,42 @@ private fun CompactStatusBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(12.dp))
             .background(Color(0xCC121820))
-            .border(1.dp, Color(0xFF3D9EFF).copy(alpha = 0.35f), RoundedCornerShape(14.dp))
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .border(1.dp, Color(0xFF3D9EFF).copy(alpha = 0.28f), RoundedCornerShape(12.dp))
+            .padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(
             modifier = Modifier
                 .weight(1f)
                 .clickable(onClick = onExpandVehicle),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            Text(
+                "MyT",
+                color = colors.textPrimary,
+                fontSize = 12.sp,
+                letterSpacing = 2.sp,
+                fontWeight = FontWeight.Bold,
+            )
             StatusIconLabel(
                 icon = if (state.charging?.isCharging == true) ClusterIcons.batteryCharging else ClusterIcons.battery,
                 label = "${state.socPercent.toInt()}%",
                 color = Color.White,
-                iconSize = 16.dp,
-                fontSize = 18.sp,
+                iconSize = 18.dp,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
             )
             StatusIconLabel(
                 icon = ClusterIcons.range,
                 label = "${state.rangeKm.toInt()} km",
                 color = colors.textSecondary,
-                iconSize = 14.dp,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
+                iconSize = 15.dp,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
             )
             if (showTires) {
                 val t = state.tires
@@ -263,12 +271,12 @@ private fun TinyAction(
         modifier = Modifier
             .clip(RoundedCornerShape(10.dp))
             .background(Color(0xFF1C2433))
-            .border(1.dp, Color(0xFF3D9EFF).copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+            .border(1.dp, Color(0xFF3D9EFF).copy(alpha = 0.35f), RoundedCornerShape(10.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 6.dp),
+            .padding(horizontal = 10.dp, vertical = 8.dp),
     ) {
-        Icon(icon, contentDescription = label, tint = Color.White, modifier = Modifier.size(14.dp))
-        Text(label, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        Icon(icon, contentDescription = label, tint = Color.White, modifier = Modifier.size(16.dp))
+        Text(label, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -307,7 +315,7 @@ private fun PrimaryDriveGauge(
                     progress = arcProgress,
                     warn = !chargingMode && (state.powerKw ?: 0f) > 120f,
                     glowAlpha = glowPulse,
-                    modifier = Modifier.fillMaxSize().padding(8.dp),
+                    modifier = Modifier.fillMaxSize().padding(4.dp),
                 )
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     TurnSignalRow(state = state)
@@ -323,7 +331,7 @@ private fun PrimaryDriveGauge(
                         Text(
                             "${state.socPercent.toInt()}",
                             color = Color.White,
-                            fontSize = 64.sp,
+                            fontSize = 72.sp,
                             fontWeight = FontWeight.Black,
                         )
                         val kw = state.charging?.chargeRateKw
@@ -349,13 +357,14 @@ private fun PrimaryDriveGauge(
                         Text(
                             UnitConverter.formatSpeed(state.speedKmh, useKmh),
                             color = Color.White,
-                            fontSize = 72.sp,
+                            fontSize = 84.sp,
                             fontWeight = FontWeight.Black,
+                            lineHeight = 84.sp,
                         )
                         Text(
                             UnitConverter.speedUnitLabel(useKmh),
                             color = Color(0xFF3D9EFF),
-                            fontSize = 18.sp,
+                            fontSize = 20.sp,
                             letterSpacing = 3.sp,
                             fontWeight = FontWeight.Bold,
                         )
@@ -528,24 +537,26 @@ private fun SecondaryGuidanceGauge(
                             mapMarkers = mapMarkers,
                         )
                         SecondaryPaneMode.GMeter -> Box(
-                            Modifier.fillMaxSize().padding(10.dp),
+                            Modifier.fillMaxSize().padding(6.dp),
                             contentAlignment = Alignment.Center,
                         ) {
                             GMeter(
                                 longAccelG = state.longAccelG,
                                 latAccelG = state.latAccelG,
                                 compact = true,
+                                embedded = true,
                                 modifier = Modifier.fillMaxWidth(),
                             )
                         }
                         SecondaryPaneMode.Tires -> Box(
-                            Modifier.fillMaxSize().padding(10.dp),
+                            Modifier.fillMaxSize().padding(6.dp),
                             contentAlignment = Alignment.Center,
                         ) {
                             TireGrid(
                                 tires = state.tires,
                                 compact = true,
                                 usePsi = usePsi,
+                                embedded = true,
                                 modifier = Modifier.fillMaxWidth(),
                             )
                         }
@@ -575,13 +586,13 @@ private fun SecondaryHeader(
             .fillMaxWidth()
             .clickable(onClick = onCycle)
             .background(Color(0xCC0A1018))
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Icon(headerIcon, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
-            Text(title, color = Color.White, fontSize = 12.sp, letterSpacing = 1.5.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(title, color = Color.White, fontSize = 13.sp, letterSpacing = 1.2.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Text(hint, color = Color.White.copy(alpha = 0.45f), fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
@@ -827,14 +838,14 @@ private fun GlassPanel(
     Box(
         modifier = modifier
             .shadow(
-                elevation = 14.dp,
-                shape = RoundedCornerShape(22.dp),
-                ambientColor = glow.copy(alpha = 0.3f),
-                spotColor = glow.copy(alpha = 0.45f),
+                elevation = 8.dp,
+                shape = RoundedCornerShape(14.dp),
+                ambientColor = glow.copy(alpha = 0.22f),
+                spotColor = glow.copy(alpha = 0.32f),
             )
-            .clip(RoundedCornerShape(22.dp))
+            .clip(RoundedCornerShape(14.dp))
             .background(Brush.verticalGradient(listOf(Color(0xE6182030), Color(0xF00A0E16))))
-            .border(width = 1.2.dp, color = glow.copy(alpha = 0.45f), shape = RoundedCornerShape(22.dp)),
+            .border(width = 1.dp, color = glow.copy(alpha = 0.38f), shape = RoundedCornerShape(14.dp)),
         content = { content() },
     )
 }
@@ -843,8 +854,8 @@ private fun GlassPanel(
 fun ClusterIconStrip(state: GaugeState, modifier: Modifier = Modifier) {
     val colors = GaugeTheme.colors
     Row(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
+        modifier = modifier.fillMaxWidth().padding(horizontal = 2.dp, vertical = 2.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         StatusChip(
