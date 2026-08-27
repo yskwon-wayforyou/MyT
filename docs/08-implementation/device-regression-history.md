@@ -61,6 +61,72 @@
 
 <!-- REGRESSION_HISTORY_APPEND_POINT -->
 
+## 2026-08-27 17:10 KST — SM-S931N (R3CY400P2PP) — PASS
+
+**산출물:** `build/device-debug/regression/20260827-171056/`  
+**집계:** PASS=21 FAIL=0 SKIP=0
+
+| ID | Status | Note |
+|----|--------|------|
+| G0-UNLOCK | PASS |  |
+| G0-ADB | PASS | serial=R3CY400P2PP model=SM-S931N |
+| R1 | PASS | cold start pid ok |
+| R2 | PASS | gauge shell labels present |
+| R2c | PASS | dual cluster + map header |
+| R2d | PASS | SOC% + BT chip |
+| R-GPS | PASS | BT OFF chip visible (log hint optional) |
+| R3 | PASS | no FATAL for com.myt |
+| R13 | PASS | portrait dual shell ok |
+| R14 | PASS | landscape dual shell ok |
+| R15 | PASS | secondary pane toggled/visible |
+| R4 | PASS | history sheet open |
+| R11 | PASS | no polyline SQLite error |
+| R5 | PASS | back to gauge |
+| R2b | PASS | more hub shows 설정 |
+| R6 | PASS | settings open via more hub |
+| R7 | PASS | back from settings |
+| R8 | PASS | voice UI open |
+| R9 | PASS | back from voice |
+| R10 | PASS | runtime log pulled |
+| R12 | PASS | process alive after suite |
+
+---
+
+
+
+## 2026-08-27 17:08 KST — SM-S931N (R3CY400P2PP) — FAIL
+
+**산출물:** `build/device-debug/regression/20260827-170828/`  
+**집계:** PASS=11 FAIL=7 SKIP=3
+
+| ID | Status | Note |
+|----|--------|------|
+| G0-UNLOCK | PASS |  |
+| G0-ADB | PASS | serial=R3CY400P2PP model=SM-S931N |
+| R1 | PASS | cold start pid ok |
+| R2 | PASS | gauge shell labels present |
+| R2c | FAIL | missing: 지시등 |
+| R2d | PASS | SOC% + BT chip |
+| R-GPS | PASS | BT OFF chip visible (log hint optional) |
+| R3 | PASS | no FATAL for com.myt |
+| R13 | PASS | portrait dual shell ok |
+| R14 | FAIL | landscape shell labels missing |
+| R15 | FAIL | could not tap secondary header |
+| R4 | FAIL | could not tap 기록/히스토리 |
+| R11 | PASS | no polyline SQLite error |
+| R5 | SKIP | 닫기 not found |
+| R2b | FAIL | could not tap 더보기 |
+| R6 | FAIL | settings UI missing |
+| R7 | SKIP | 뒤로/닫기 not found |
+| R8 | FAIL | could not tap 음성 |
+| R9 | SKIP | voice 닫기 not found |
+| R10 | PASS | runtime log pulled |
+| R12 | PASS | process alive after suite |
+
+---
+
+
+
 ## 2026-08-27 16:43 KST — SM-S931N (R3CY400P2PP) — PASS
 
 **산출물:** `build/device-debug/regression/20260827-164346/`  

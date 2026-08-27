@@ -42,8 +42,9 @@ fun VehicleStatusGrid(
     TeslaGlassPanel(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = if (compact) 4.dp else 8.dp, vertical = if (compact) 2.dp else 4.dp),
+            .padding(horizontal = if (compact) 0.dp else 4.dp, vertical = if (compact) 0.dp else 2.dp),
         accent = Color(0xFF64D2FF),
+        flat = compact,
     ) {
         Column(
             modifier = Modifier.padding(if (compact) 6.dp else 10.dp),

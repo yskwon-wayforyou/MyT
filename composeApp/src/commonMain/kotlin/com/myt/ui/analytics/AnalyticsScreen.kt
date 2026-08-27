@@ -68,8 +68,8 @@ fun AnalyticsScreen(
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("고급 분석", color = colors.textPrimary, fontSize = 22.sp, fontWeight = FontWeight.Bold)
@@ -77,7 +77,7 @@ fun AnalyticsScreen(
             }
 
             TeslaCard(accent = Color(0xFF30D158)) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("탄소 배지 · ${badge.tier.label}", color = colors.textPrimary, fontWeight = FontWeight.SemiBold)
                     Text(
                         "CO₂ 절감 ${"%.1f".format(badge.co2SavedKg)} kg · 나무 ${"%.1f".format(co2.equivalentTrees)}그루 상당",
@@ -101,7 +101,7 @@ fun AnalyticsScreen(
             }
 
             TeslaCard(accent = colors.accentBlue) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("배터리 건강 (충전 기반 추정)", color = colors.textPrimary, fontWeight = FontWeight.SemiBold)
                     battery.trendPctPerYear?.let { trend ->
                         Text(
@@ -120,9 +120,9 @@ fun AnalyticsScreen(
             }
 
             TeslaCard(accent = Color(0xFFBF5AF2)) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("데이터 내보내기 (M43)", color = colors.textPrimary, fontWeight = FontWeight.SemiBold)
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         TextButton(onClick = { viewModel.exportTrips(onShareText) }) {
                             Text("주행 CSV", color = colors.accentBlue)
                         }
@@ -146,7 +146,7 @@ fun AnalyticsScreen(
             }
 
             TeslaCard(accent = Color(0xFF8E8E93)) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("FSD / Autopilot (M42)", color = colors.textPrimary, fontWeight = FontWeight.SemiBold)
                     Text(fsd.message, color = colors.textSecondary, fontSize = 12.sp)
                     if (fsd.autopilotMinutes > 0) {
@@ -160,7 +160,7 @@ fun AnalyticsScreen(
             }
 
             TeslaCard(accent = Color(0xFF64D2FF)) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Live Camera (M44)", color = colors.textPrimary, fontWeight = FontWeight.SemiBold)
                     Text(liveCamera.message, color = colors.textSecondary, fontSize = 12.sp)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

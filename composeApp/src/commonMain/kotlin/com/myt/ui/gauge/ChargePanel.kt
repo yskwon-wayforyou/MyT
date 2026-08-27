@@ -27,6 +27,7 @@ fun ChargePanel(
     socPercent: Float,
     modifier: Modifier = Modifier,
     compact: Boolean = false,
+    embedded: Boolean = false,
 ) {
     val colors = GaugeTheme.colors
     val isCharging = charge?.isCharging == true
@@ -34,23 +35,25 @@ fun ChargePanel(
     val limit = charge?.chargeLimitPercent ?: 80
     val fill = (socPercent / limit.coerceAtLeast(1).toFloat()).coerceIn(0f, 1f)
 
-    TeslaCard(modifier = modifier.fillMaxWidth(), accent = colors.socYellow) {
+    val body: @Composable () -> Unit = {
         Column(
-            modifier = Modifier.padding(if (compact) 10.dp else 14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(if (embedded) 4.dp else if (compact) 10.dp else 14.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text("충전", color = colors.textSecondary, fontSize = 11.sp, letterSpacing = 1.sp)
-                Text(
-                    if (isCharging) "ACTIVE" else charge?.chargingState ?: "대기",
-                    color = if (isCharging) colors.socGreen else colors.textSecondary,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Medium,
-                )
+            if (!embedded) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("충전", color = colors.textSecondary, fontSize = 11.sp, letterSpacing = 1.sp)
+                    Text(
+                        if (isCharging) "ACTIVE" else charge?.chargingState ?: "대기",
+                        color = if (isCharging) colors.socGreen else colors.textSecondary,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
             }
             Box(
                 modifier = Modifier
@@ -87,5 +90,10 @@ fun ChargePanel(
                 )
             }
         }
+    }
+    if (embedded) {
+        Box(modifier.fillMaxWidth()) { body() }
+    } else {
+        TeslaCard(modifier = modifier.fillMaxWidth(), accent = colors.socYellow) { body() }
     }
 }

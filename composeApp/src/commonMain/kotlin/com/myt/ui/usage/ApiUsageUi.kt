@@ -91,9 +91,9 @@ fun ApiUsageDetailScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
-                .padding(20.dp)
+                .padding(8.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -131,14 +131,14 @@ fun ApiUsageDetailScreen(
             CategoryRow("Command", snapshot.commandCount, snapshot.commandLimit, colors.socYellow)
             CategoryRow("Wake", snapshot.wakeCount, snapshot.wakeLimit, colors.socRed)
             TeslaCard(modifier = Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(16.dp)) {
+                Column(Modifier.padding(8.dp)) {
                     Text("최근 7일 추정 비용", color = colors.textSecondary, fontSize = 12.sp)
                     Spacer(Modifier.height(12.dp))
                     WeekChart(days = snapshot.last7DaysUsd, barColor = colors.accent)
                 }
             }
             TeslaCard(modifier = Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("오늘", color = colors.textSecondary, fontSize = 12.sp)
                     Text(
                         "Data ${snapshot.dailyDataCount}/${snapshot.dailyDataLimit}  ·  Wake ${snapshot.dailyWakeCount}/${snapshot.dailyWakeLimit}",
@@ -153,7 +153,7 @@ fun ApiUsageDetailScreen(
                 }
             }
             TeslaCard(modifier = Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("최근 호출", color = colors.textSecondary, fontSize = 12.sp)
                     if (snapshot.recent.isEmpty()) {
                         Text("아직 기록이 없습니다", color = colors.textSecondary, fontSize = 13.sp)

@@ -31,6 +31,7 @@ import kotlinx.coroutines.launch
 fun AutomationRulesPanel(
     repository: AutomationRepository,
     modifier: Modifier = Modifier,
+    flat: Boolean = false,
 ) {
     val colors = GaugeTheme.colors
     val scope = rememberCoroutineScope()
@@ -38,10 +39,10 @@ fun AutomationRulesPanel(
     LaunchedEffect(Unit) {
         rules = repository.listRules()
     }
-    TeslaCard(modifier = modifier.fillMaxWidth(), accent = colors.accentPurple) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    TeslaCard(modifier = modifier.fillMaxWidth(), accent = colors.accentPurple, flat = flat) {
+        Column(modifier.padding(if (flat) 12.dp else 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("자동화 (M32)", color = colors.textPrimary, fontWeight = FontWeight.SemiBold)
-            Text("로컬 데모 규칙 5개 · 서버 동기화는 Phase 2", color = colors.textSecondary, fontSize = 12.sp)
+            Text("로컬 데모 규칙 · 서버 동기화는 Phase 2", color = colors.textSecondary, fontSize = 11.sp)
             rules.forEach { rule ->
                 Row(
                     Modifier.fillMaxWidth(),

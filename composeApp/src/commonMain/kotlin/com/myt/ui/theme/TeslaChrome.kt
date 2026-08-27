@@ -26,8 +26,8 @@ import myt.composeapp.generated.resources.Res
 import myt.composeapp.generated.resources.model3_hero
 import org.jetbrains.compose.resources.painterResource
 
-val TeslaCardShape = RoundedCornerShape(22.dp)
-val GlassPanelShape = RoundedCornerShape(20.dp)
+val TeslaCardShape = RoundedCornerShape(14.dp)
+val GlassPanelShape = RoundedCornerShape(12.dp)
 
 @Composable
 fun TeslaScreen(
@@ -140,17 +140,26 @@ fun TeslaHeroImage(
 fun TeslaGlassPanel(
     modifier: Modifier = Modifier,
     accent: Color? = null,
+    flat: Boolean = false,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val colors = GaugeTheme.colors
     Box(
         modifier = modifier
-            .shadow(8.dp, GlassPanelShape, ambientColor = Color.Black, spotColor = Color.Black)
+            .then(
+                if (flat) {
+                    Modifier
+                } else {
+                    Modifier.shadow(6.dp, GlassPanelShape, ambientColor = Color.Black, spotColor = Color.Black)
+                },
+            )
             .clip(GlassPanelShape)
             .background(colors.panelGlass)
-            .border(1.dp, colors.panelGlassBorder, GlassPanelShape),
+            .then(
+                if (flat) Modifier else Modifier.border(1.dp, colors.panelGlassBorder, GlassPanelShape),
+            ),
     ) {
-        if (accent != null) {
+        if (accent != null && !flat) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -162,7 +171,7 @@ fun TeslaGlassPanel(
                     ),
             )
         }
-        Box(modifier = Modifier.padding(top = if (accent != null) 3.dp else 0.dp)) {
+        Box(modifier = Modifier.padding(top = if (accent != null && !flat) 3.dp else 0.dp)) {
             content()
         }
     }
@@ -172,21 +181,34 @@ fun TeslaGlassPanel(
 fun TeslaCard(
     modifier: Modifier = Modifier,
     accent: Color? = null,
+    flat: Boolean = false,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val colors = GaugeTheme.colors
     Box(
         modifier = modifier
-            .shadow(4.dp, TeslaCardShape, ambientColor = Color.Black.copy(0.4f))
+            .then(
+                if (flat) {
+                    Modifier
+                } else {
+                    Modifier.shadow(3.dp, TeslaCardShape, ambientColor = Color.Black.copy(0.35f))
+                },
+            )
             .clip(TeslaCardShape)
             .background(
                 Brush.verticalGradient(
                     listOf(colors.surfaceHigh.copy(alpha = 0.95f), colors.surface),
                 ),
             )
-            .border(1.dp, colors.panelGlassBorder.copy(alpha = 0.55f), TeslaCardShape),
+            .then(
+                if (flat) {
+                    Modifier
+                } else {
+                    Modifier.border(1.dp, colors.panelGlassBorder.copy(alpha = 0.45f), TeslaCardShape)
+                },
+            ),
     ) {
-        if (accent != null) {
+        if (accent != null && !flat) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -194,10 +216,29 @@ fun TeslaCard(
                     .background(accent.copy(alpha = 0.85f)),
             )
         }
-        Box(modifier = Modifier.padding(top = if (accent != null) 2.dp else 0.dp)) {
+        Box(modifier = Modifier.padding(top = if (accent != null && !flat) 2.dp else 0.dp)) {
             content()
         }
     }
+}
+
+/** Thin separator between control groups (preferred over stacked borders). */
+@Composable
+fun SectionHairline(mod: Modifier = Modifier) {
+    Box(
+        modifier = mod
+            .fillMaxWidth()
+            .height(1.dp)
+            .background(
+                Brush.horizontalGradient(
+                    listOf(
+                        Color.Transparent,
+                        GaugeTheme.colors.panelGlassBorder.copy(alpha = 0.55f),
+                        Color.Transparent,
+                    ),
+                ),
+            ),
+    )
 }
 
 @Composable

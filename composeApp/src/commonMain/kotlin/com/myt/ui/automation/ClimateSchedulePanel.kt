@@ -37,6 +37,7 @@ import kotlin.random.Random
 fun ClimateSchedulePanel(
     repository: ClimateScheduleRepository,
     modifier: Modifier = Modifier,
+    flat: Boolean = false,
 ) {
     val colors = GaugeTheme.colors
     val scope = rememberCoroutineScope()
@@ -47,13 +48,13 @@ fun ClimateSchedulePanel(
     fun refresh() {
         scope.launch { schedules = repository.list() }
     }
-    TeslaCard(modifier = modifier.fillMaxWidth(), accent = colors.accentBlue) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    TeslaCard(modifier = modifier.fillMaxWidth(), accent = colors.accentBlue, flat = flat) {
+        Column(modifier.padding(if (flat) 12.dp else 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("공조 세밀 예약 (W3)", color = colors.textPrimary, fontWeight = FontWeight.SemiBold)
             Text(
-                "시각·온도·열선·해동·반복 조건을 저장합니다. Plus(W9) 예고 · 지금은 Free에 포함.",
+                "시각·온도·열선·해동·반복 · Plus(W9) 예고 · 지금은 Free 포함",
                 color = colors.textSecondary,
-                fontSize = 12.sp,
+                fontSize = 11.sp,
             )
             schedules.forEach { schedule ->
                 Row(

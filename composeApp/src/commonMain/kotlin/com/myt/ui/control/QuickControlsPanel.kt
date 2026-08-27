@@ -39,7 +39,7 @@ fun QuickControlsPanel(
     val scope = rememberCoroutineScope()
     var message by remember { mutableStateOf<String?>(null) }
     TeslaCard(modifier = modifier.fillMaxWidth(), accent = colors.accentBlue) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text("퀵 컨트롤 (M30)", color = colors.textPrimary, fontWeight = FontWeight.SemiBold)
             Text(
                 "시뮬/미로그인 시 데모 · 로그인 시 Fleet 실명령(서명·VK 필요 시 안내). 주행 중 Unlock/Trunk/Frunk 차단.",

@@ -1,6 +1,7 @@
 package com.myt.ui.history
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -34,6 +35,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -86,13 +88,13 @@ fun HistoryScreen(
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 8.dp, vertical = 8.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Text("히스토리", color = colors.textPrimary, fontSize = 26.sp, fontWeight = FontWeight.Light)
+                Text("히스토리", color = colors.textPrimary, fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
                 Button(onClick = onBack, colors = ButtonDefaults.buttonColors(containerColor = colors.surfaceHigh)) {
                     Text("닫기", color = colors.textPrimary)
                 }
@@ -108,7 +110,7 @@ fun HistoryScreen(
                 selectedCharge = null
                 selectedFleet = null
             }
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(6.dp))
             FilterRow(
                 period = filter.period,
                 sort = filter.sort,
@@ -118,10 +120,23 @@ fun HistoryScreen(
                 onSort = viewModel::setSort,
                 onToggleFailures = viewModel::toggleFailuresOnly,
             )
-            TeslaGlassPanel(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), accent = colors.accentBlue) {
-                Column(Modifier.padding(12.dp)) {
+            TeslaGlassPanel(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), accent = colors.accentBlue, flat = true) {
+                Column(Modifier.padding(10.dp)) {
                     Text("추이", color = colors.textSecondary, fontSize = 11.sp)
                     HistoryBarChart(data = chart, barColor = colors.accent)
+                    if (chart.isNotEmpty()) {
+                        val total = chart.sumOf { it.value.toDouble() }.toFloat()
+                        Text(
+                            when (filter.tab) {
+                                HistoryTab.Driving -> "기간 합계 ${"%.1f".format(total)} km · ${chart.size}일"
+                                HistoryTab.Charging -> "기간 합계 ${"%.1f".format(total)} kWh · ${chart.size}일"
+                                HistoryTab.FleetApi -> "호출 ${total.toInt()}건 · ${chart.size}일"
+                            },
+                            color = colors.textSecondary,
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(top = 4.dp),
+                        )
+                    }
                 }
             }
 
@@ -138,7 +153,7 @@ fun HistoryScreen(
             val filteredCharges = if (selectedDayLabel == null) charges else charges.filter { dayLabel(it.startedAtMs) == selectedDayLabel }
             val filteredFleet = if (selectedDayLabel == null) fleet else fleet.filter { dayLabel(it.atMs) == selectedDayLabel }
 
-            LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 when (filter.tab) {
                     HistoryTab.Driving -> items(filteredTrips, key = { it.id }) { TripRow(it, onClick = { selectedTrip = it }) }
                     HistoryTab.Charging -> items(filteredCharges, key = { it.id }) { ChargeRow(it, onClick = { selectedCharge = it }) }
@@ -250,13 +265,20 @@ private fun HistoryBarChart(data: List<DailyAggregate>, barColor: Color) {
 
 @Composable
 private fun TripRow(item: TripHistoryItem, onClick: () -> Unit) {
+    val durationMin = item.endedAtMs?.let { ((it - item.startedAtMs) / 60_000L).toInt() }
     val efficiencyText = item.efficiencyKmPerKwh?.let { v ->
-        " · 효율 ${"%.2f".format(v)} km/kWh"
-    }.orEmpty()
+        "${"%.1f".format(v)} km/kWh"
+    }
     HistoryTableCard(
         title = formatTime(item.startedAtMs),
         value = "${"%.1f".format(item.distanceKm)} km",
-        subtitle = "최고 ${item.maxSpeedKmh?.toInt() ?: "--"} km/h · SOC ${item.startSoc?.toInt() ?: "--"}→${item.endSoc?.toInt() ?: "--"}$efficiencyText",
+        metrics = listOfNotNull(
+            "최고 ${item.maxSpeedKmh?.toInt() ?: "--"}",
+            item.avgSpeedKmh?.let { "평균 ${it.toInt()}" },
+            durationMin?.let { "${it}분" },
+            "SOC ${item.startSoc?.toInt() ?: "--"}→${item.endSoc?.toInt() ?: "--"}",
+            efficiencyText,
+        ),
         accent = GaugeTheme.colors.socGreen,
         modifier = Modifier.clickable(onClick = onClick),
     )
@@ -264,10 +286,17 @@ private fun TripRow(item: TripHistoryItem, onClick: () -> Unit) {
 
 @Composable
 private fun ChargeRow(item: ChargeHistoryItem, onClick: () -> Unit) {
+    val durationMin = item.endedAtMs?.let { ((it - item.startedAtMs) / 60_000L).toInt() }
+    val deltaSoc = item.endSoc?.let { it - item.startSoc }
     HistoryTableCard(
         title = formatTime(item.startedAtMs),
         value = "${"%.1f".format(item.energyKwh ?: 0f)} kWh",
-        subtitle = "SOC ${item.startSoc.toInt()}→${item.endSoc?.toInt() ?: "--"} · Peak ${item.peakKw?.toInt() ?: "--"} kW",
+        metrics = listOfNotNull(
+            "SOC ${item.startSoc.toInt()}→${item.endSoc?.toInt() ?: "--"}",
+            deltaSoc?.let { "+${"%.0f".format(it)}%p" },
+            "Peak ${item.peakKw?.toInt() ?: "--"} kW",
+            durationMin?.let { "${it}분" },
+        ),
         accent = GaugeTheme.colors.socYellow,
         modifier = Modifier.clickable(onClick = onClick),
     )
@@ -278,7 +307,10 @@ private fun FleetRow(item: FleetApiHistoryItem, onClick: () -> Unit) {
     HistoryTableCard(
         title = formatTime(item.atMs),
         value = item.category,
-        subtitle = "${if (item.ok) "OK" else "FAIL"} ${item.detail.orEmpty()}",
+        metrics = listOf(
+            if (item.ok) "성공" else "실패",
+            item.detail.orEmpty().ifBlank { "상세 없음" },
+        ),
         accent = if (item.ok) GaugeTheme.colors.accentBlue else GaugeTheme.colors.accent,
         modifier = Modifier.clickable(onClick = onClick),
     )
@@ -288,17 +320,37 @@ private fun FleetRow(item: FleetApiHistoryItem, onClick: () -> Unit) {
 private fun HistoryTableCard(
     title: String,
     value: String,
-    subtitle: String,
+    metrics: List<String>,
     accent: Color,
     modifier: Modifier = Modifier,
 ) {
-    TeslaCard(modifier = modifier.fillMaxWidth(), accent = accent) {
-        Column(Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
+    val colors = GaugeTheme.colors
+    TeslaCard(modifier = modifier.fillMaxWidth(), accent = accent, flat = true) {
+        Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(title, color = GaugeTheme.colors.textSecondary, fontSize = 11.sp)
-                Text(value, color = accent, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Text(title, color = colors.textSecondary, fontSize = 11.sp)
+                Text(value, color = accent, fontSize = 17.sp, fontWeight = FontWeight.Bold)
             }
-            Text(subtitle, color = GaugeTheme.colors.textPrimary, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 6.dp)
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                metrics.filter { it.isNotBlank() }.forEach { m ->
+                    Text(
+                        m,
+                        color = colors.textPrimary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(colors.surfaceHigh)
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                    )
+                }
+            }
         }
     }
 }

@@ -136,15 +136,15 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
-                .padding(horizontal = 20.dp, vertical = 12.dp),
+                .padding(horizontal = 8.dp, vertical = 8.dp),
         ) {
-            Text("설정", color = colors.textPrimary, fontSize = 28.sp, fontWeight = FontWeight.Light)
-            Spacer(Modifier.height(12.dp))
+            Text("설정", color = colors.textPrimary, fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(8.dp))
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 SectionTitle("계기판 레이아웃")
                 TeslaCard(modifier = Modifier.fillMaxWidth()) {

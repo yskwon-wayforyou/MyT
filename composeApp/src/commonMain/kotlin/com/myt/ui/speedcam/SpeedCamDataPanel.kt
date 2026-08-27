@@ -38,6 +38,7 @@ fun SpeedCamDataPanel(
     onUpdateClick: () -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
+    flat: Boolean = false,
 ) {
     val colors = GaugeTheme.colors
     val statusLabel = when {
@@ -54,10 +55,10 @@ fun SpeedCamDataPanel(
         else -> colors.textSecondary
     }
     val lastSyncText = status.lastSyncEpochMs?.let { formatSyncTime(it) } ?: "동기화 기록 없음"
-    TeslaCard(modifier = modifier.fillMaxWidth(), accent = Color(0xFF30D158)) {
+    val body: @Composable () -> Unit = {
         Column(
-            Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            Modifier.padding(if (flat) 12.dp else 16.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -152,6 +153,9 @@ fun SpeedCamDataPanel(
                 )
             }
         }
+    }
+    TeslaCard(modifier = modifier.fillMaxWidth(), accent = Color(0xFF30D158), flat = flat) {
+        body()
     }
 }
 

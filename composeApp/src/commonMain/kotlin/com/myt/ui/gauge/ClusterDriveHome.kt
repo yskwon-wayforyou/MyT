@@ -20,8 +20,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -118,7 +120,7 @@ fun ClusterDriveHome(
             if (landscape) {
                 Row(
                     modifier = Modifier.fillMaxSize(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(0.dp),
                 ) {
                     Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
                         PrimaryDriveGauge(
@@ -136,6 +138,13 @@ fun ClusterDriveHome(
                             modifier = Modifier.fillMaxSize(),
                         )
                     }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .padding(vertical = 10.dp)
+                            .width(1.dp)
+                            .background(Color.White.copy(alpha = 0.18f)),
+                    )
                     SecondaryGuidanceGauge(
                         state = state,
                         alert = alert,
@@ -152,7 +161,7 @@ fun ClusterDriveHome(
             } else {
                 Column(
                     modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(0.dp),
                 ) {
                     Box(modifier = Modifier.weight(0.48f).fillMaxWidth()) {
                         PrimaryDriveGauge(
@@ -170,6 +179,13 @@ fun ClusterDriveHome(
                             modifier = Modifier.fillMaxSize(),
                         )
                     }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp)
+                            .height(1.dp)
+                            .background(Color.White.copy(alpha = 0.18f)),
+                    )
                     SecondaryGuidanceGauge(
                         state = state,
                         alert = alert,
@@ -205,7 +221,6 @@ private fun CompactStatusBar(
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .background(Color(0xCC121820))
-            .border(1.dp, Color(0xFF3D9EFF).copy(alpha = 0.28f), RoundedCornerShape(12.dp))
             .padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -303,77 +318,134 @@ private fun PrimaryDriveGauge(
         animationSpec = infiniteRepeatable(tween(2200, easing = LinearEasing), RepeatMode.Reverse),
         label = "glowPulse",
     )
-    GlassPanel(
+    GlassPane(
         modifier = modifier,
         glow = Color(0xFF3D9EFF),
         content = {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                DualNeonArcs(
-                    progress = arcProgress,
-                    warn = !chargingMode && (state.powerKw ?: 0f) > 120f,
-                    glowAlpha = glowPulse,
-                    modifier = Modifier.fillMaxSize().padding(4.dp),
-                )
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    TurnSignalRow(state = state)
-                    if (showGear) GearPill(state.gear)
-                    if (chargingMode) {
-                        StatusIconLabel(
-                            icon = ClusterIcons.charging,
-                            label = "CHARGING",
-                            color = colors.socGreen,
-                            iconSize = 16.dp,
-                            fontSize = 14.sp,
-                        )
-                        Text(
-                            "${state.socPercent.toInt()}",
-                            color = Color.White,
-                            fontSize = 72.sp,
-                            fontWeight = FontWeight.Black,
-                        )
-                        val kw = state.charging?.chargeRateKw
-                        StatusIconLabel(
-                            icon = ClusterIcons.batteryCharging,
-                            label = if (kw != null) "${"%.1f".format(kw)} kW" else "- kW",
-                            color = Color(0xFF3D9EFF),
-                            iconSize = 16.dp,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        state.charging?.timeToFullMinutes?.let {
-                            StatusIconLabel(
-                                icon = ClusterIcons.schedule,
-                                label = "완충 ${it}분",
-                                color = Color.White.copy(alpha = 0.7f),
-                                iconSize = 13.dp,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Medium,
+            if (chargingMode) {
+                ChargingPrimaryContent(state = state, colors = colors)
+            } else {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    DualNeonArcs(
+                        progress = arcProgress,
+                        warn = (state.powerKw ?: 0f) > 120f,
+                        glowAlpha = glowPulse,
+                        modifier = Modifier.fillMaxSize().padding(4.dp),
+                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        TurnSignalRow(state = state)
+                        if (showGear) GearPill(state.gear)
+                        if (showSpeed) {
+                            Text(
+                                UnitConverter.formatSpeed(state.speedKmh, useKmh),
+                                color = Color.White,
+                                fontSize = 84.sp,
+                                fontWeight = FontWeight.Black,
+                                lineHeight = 84.sp,
+                            )
+                            Text(
+                                UnitConverter.speedUnitLabel(useKmh),
+                                color = Color(0xFF3D9EFF),
+                                fontSize = 20.sp,
+                                letterSpacing = 3.sp,
+                                fontWeight = FontWeight.Bold,
                             )
                         }
-                    } else if (showSpeed) {
-                        Text(
-                            UnitConverter.formatSpeed(state.speedKmh, useKmh),
-                            color = Color.White,
-                            fontSize = 84.sp,
-                            fontWeight = FontWeight.Black,
-                            lineHeight = 84.sp,
-                        )
-                        Text(
-                            UnitConverter.speedUnitLabel(useKmh),
-                            color = Color(0xFF3D9EFF),
-                            fontSize = 20.sp,
-                            letterSpacing = 3.sp,
-                            fontWeight = FontWeight.Bold,
-                        )
+                        SourceCaption(state.speedSource)
                     }
-                    SourceCaption(state.speedSource)
                 }
             }
         },
     )
+}
+
+@Composable
+private fun ChargingPrimaryContent(
+    state: GaugeState,
+    colors: com.myt.ui.theme.GaugeColors,
+) {
+    val charge = state.charging
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        TurnSignalRow(state = state)
+        StatusIconLabel(
+            icon = ClusterIcons.charging,
+            label = "CHARGING",
+            color = colors.socGreen,
+            iconSize = 16.dp,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+        )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                "${state.socPercent.toInt()}",
+                color = Color.White,
+                fontSize = 78.sp,
+                fontWeight = FontWeight.Black,
+                lineHeight = 78.sp,
+            )
+            Text("%", color = Color(0xFF30D158), fontSize = 18.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+            Text(
+                "주행 가능 ${state.rangeKm.toInt()} km",
+                color = colors.textSecondary,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+            )
+        }
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            ChargeMetricRow(
+                left = "충전 속도" to (charge?.chargeRateKw?.let { "${"%.1f".format(it)} kW" } ?: "--"),
+                right = "완충까지" to (charge?.timeToFullMinutes?.let { "${it}분" } ?: "--"),
+            )
+            ChargeMetricRow(
+                left = "한도" to (charge?.chargeLimitPercent?.let { "$it%" } ?: "--"),
+                right = "상태" to (charge?.chargingState?.takeIf { it.isNotBlank() } ?: "Charging"),
+            )
+        }
+    }
+}
+
+@Composable
+private fun ChargeMetricRow(
+    left: Pair<String, String>,
+    right: Pair<String, String>,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        ChargeMetricChip(left.first, left.second, Modifier.weight(1f))
+        ChargeMetricChip(right.first, right.second, Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun ChargeMetricChip(label: String, value: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(Color.White.copy(alpha = 0.06f))
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+    ) {
+        Text(label, color = Color.White.copy(alpha = 0.45f), fontSize = 11.sp)
+        Text(value, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+    }
 }
 
 @Composable
@@ -388,7 +460,7 @@ private fun TurnSignalRow(state: GaugeState) {
     val rightOn = state.turnSignalRight == true || state.hazardLightsOn == true
     val known = state.turnSignalLeft != null || state.turnSignalRight != null || state.hazardLightsOn != null
     Row(
-        horizontalArrangement = Arrangement.spacedBy(18.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.padding(bottom = 4.dp),
     ) {
@@ -501,7 +573,7 @@ private fun SecondaryGuidanceGauge(
         SecondaryPaneMode.GMeter -> "G-METER"
         SecondaryPaneMode.Tires -> "TIRES"
     }
-    GlassPanel(
+    GlassPane(
         modifier = modifier,
         glow = panelGlow,
         content = {
@@ -830,24 +902,22 @@ private fun DualNeonArcs(
 }
 
 @Composable
-private fun GlassPanel(
+private fun GlassPane(
     modifier: Modifier = Modifier,
     glow: Color,
     content: @Composable () -> Unit,
 ) {
+    // Frameless cluster pane — group separation uses mid hairlines, not stacked borders.
     Box(
         modifier = modifier
-            .shadow(
-                elevation = 8.dp,
-                shape = RoundedCornerShape(14.dp),
-                ambientColor = glow.copy(alpha = 0.22f),
-                spotColor = glow.copy(alpha = 0.32f),
-            )
-            .clip(RoundedCornerShape(14.dp))
-            .background(Brush.verticalGradient(listOf(Color(0xE6182030), Color(0xF00A0E16))))
-            .border(width = 1.dp, color = glow.copy(alpha = 0.38f), shape = RoundedCornerShape(14.dp)),
-        content = { content() },
-    )
+            .clip(RoundedCornerShape(10.dp))
+            .background(Brush.verticalGradient(listOf(Color(0xCC121820), Color(0xF0080C12))))
+            .border(width = 0.5.dp, color = glow.copy(alpha = 0.18f), shape = RoundedCornerShape(10.dp)),
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            content()
+        }
+    }
 }
 
 @Composable

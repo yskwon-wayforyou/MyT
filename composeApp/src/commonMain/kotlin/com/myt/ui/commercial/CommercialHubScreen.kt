@@ -73,8 +73,8 @@ fun CommercialHubScreen(
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("구독 · Watch · 위젯", color = colors.textPrimary, fontSize = 22.sp, fontWeight = FontWeight.Bold)
@@ -82,7 +82,7 @@ fun CommercialHubScreen(
             }
 
             TeslaCard(accent = colors.accentBlue) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("샌드박스 구독 (M37)", color = colors.textPrimary, fontWeight = FontWeight.SemiBold)
                     Text("Play Billing 전 로컬 플랜입니다. 스토어 연동 시 동일 게이트가 적용됩니다.", color = colors.textSecondary, fontSize = 12.sp)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -117,7 +117,7 @@ fun CommercialHubScreen(
 
             if (SubscriptionFeatures.watchPreview(plan)) {
                 TeslaCard(accent = Color(0xFF30D158)) {
-                    Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Column(Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Watch 미리보기 (M34/M35)", color = colors.textPrimary, fontWeight = FontWeight.SemiBold)
                         Box(
                             Modifier
@@ -152,7 +152,7 @@ fun CommercialHubScreen(
             }
 
             TeslaCard(accent = Color(0xFFBF5AF2)) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("홈 위젯 미리보기 (M36)", color = colors.textPrimary, fontWeight = FontWeight.SemiBold)
                     Row(
                         Modifier
