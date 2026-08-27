@@ -29,6 +29,7 @@ import com.myt.domain.model.GaugeState
 import com.myt.domain.model.PoiDataStatus
 import com.myt.domain.automation.AutomationRepository
 import com.myt.ui.automation.AutomationRulesPanel
+import com.myt.ui.automation.ClimateSchedulePanel
 import com.myt.ui.speedcam.SpeedCamDataPanel
 import com.myt.domain.usecase.UiFreshNeed
 import com.myt.ui.theme.GaugeTheme
@@ -99,6 +100,8 @@ fun MoreHubScreen(
                 fontSize = 12.sp,
             )
             AutomationRulesPanel(repository = automationRepo)
+            val climateRepo = remember { KoinPlatform.getKoin().get<com.myt.domain.automation.ClimateScheduleRepository>() }
+            ClimateSchedulePanel(repository = climateRepo)
             Text(
                 "차량 제어·위젯 미리보기는 구독 / Watch에서 확인할 수 있습니다.",
                 color = colors.textSecondary,

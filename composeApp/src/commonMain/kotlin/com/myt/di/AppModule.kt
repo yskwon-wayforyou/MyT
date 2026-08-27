@@ -57,8 +57,11 @@ import com.myt.domain.usecase.RoadSnapUseCase
 import com.myt.domain.usecase.PresenceUseCase
 import com.myt.domain.usecase.SpeedCamUseCase
 import com.myt.domain.automation.AutomationRepository
+import com.myt.domain.automation.ClimateScheduleEngine
+import com.myt.domain.automation.ClimateScheduleRepository
 import com.myt.domain.automation.LocalAutomationEngine
 import com.myt.domain.automation.LocalAutomationRepository
+import com.myt.domain.automation.SettingsClimateScheduleRepository
 import com.myt.domain.control.DemoVehicleControlGateway
 import com.myt.domain.control.FleetVehicleControlGateway
 import com.myt.domain.control.SafetyGatedVehicleControl
@@ -166,8 +169,18 @@ val domainModule = module {
     single { DemoLiveCameraClient() }
     single<LiveCameraClient> { get<DemoLiveCameraClient>() }
     single<AutomationRepository> { LocalAutomationRepository() }
+    single<ClimateScheduleRepository> { SettingsClimateScheduleRepository(get()) }
     single<PushNotifier> { InAppPushNotifier() }
     single { LocalAutomationEngine(get(), get(), get()) }
+    single {
+        ClimateScheduleEngine(
+            repository = get(),
+            controlGateway = get(),
+            settingsRepository = get(),
+            pushNotifier = get(),
+            scope = get(),
+        )
+    }
     single<BillingGateway> { LocalBillingGateway(get()) }
     single<WatchCompanionBridge> { InMemoryWatchCompanionBridge() }
     single<WidgetSnapshotProvider> {

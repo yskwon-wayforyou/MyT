@@ -112,7 +112,7 @@ flowchart LR
 |---|---|---|---|---|---|
 | M32 | 조건 트리거 | charge_complete, gear_park, 저온 등 | ◐ 로컬 | 규칙 CRUD·영속·실 텔레메트리 연동 | W3 |
 | AUTO-01 | 스케줄 프리컨디션 | 출발 전 공조 | ◐ UI 규칙 | 스케줄러 + 실 climate 명령 | W3 |
-| PLUS-CLIM | **공조 세밀 예약** FR-V06a | 시각·온도·열선/통풍·defrost·반복 | ○ | 예약 모델·UI·스케줄러·Fleet set_temps/remote_start; **W9 Plus** | **W3** |
+| PLUS-CLIM | **공조 세밀 예약** FR-V06a | 시각·온도·열선/통풍·defrost·반복 | ◐ 기반 | set_temps/좌석·스티어링 Fleet 명령·편집 UI 고도화; **W9 Plus** | **W3** |
 | AUTO-02 | 지오펜스 | 진입/이탈 | ○ | 위치 기반 규칙 | W3 |
 | AUTO-03 | Sentry 이벤트 알림 | | ○ | Fleet/텔레메트리 이벤트 구독 | W3–W4 |
 | M33 | FCM 푸시 | 백그라운드 | ◐ 인앱 Snackbar | FCM 연동, 채널, Doze 가이드 (APNs는 W7) | **W3** |

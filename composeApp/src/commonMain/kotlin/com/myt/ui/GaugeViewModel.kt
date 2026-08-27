@@ -37,6 +37,7 @@ import com.myt.domain.usecase.UiFreshNeed
 import com.myt.domain.usecase.VoiceCommandResult
 import com.myt.domain.usecase.VoiceCommandUseCase
 import com.myt.domain.usecase.VoiceNavUseCase
+import com.myt.domain.automation.ClimateScheduleEngine
 import com.myt.domain.automation.LocalAutomationEngine
 import com.myt.phase2.WatchCompanionBridge
 import com.myt.phase2.WatchGaugePayload
@@ -76,6 +77,7 @@ class GaugeViewModel(
     private val haIntegrationConfigStore: HaIntegrationConfigStore,
     private val watchCompanionBridge: WatchCompanionBridge,
     private val localAutomationEngine: LocalAutomationEngine,
+    private val climateScheduleEngine: ClimateScheduleEngine,
 ) : ViewModel() {
 
     val gaugeState: StateFlow<GaugeState> = telemetryUseCase.gaugeState
@@ -158,6 +160,7 @@ class GaugeViewModel(
     init {
         presenceUseCase.startMonitoring()
         localAutomationEngine.start(gaugeState)
+        climateScheduleEngine.start()
         viewModelScope.launch { quotaUseCase.hydrate() }
         viewModelScope.launch {
             poiBootstrapUseCase.ensureSeeded()
@@ -473,6 +476,7 @@ class GaugeViewModel(
         stopGaugeSession()
         presenceUseCase.stopMonitoring()
         localAutomationEngine.stop()
+        climateScheduleEngine.stop()
         super.onCleared()
     }
 

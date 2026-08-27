@@ -59,7 +59,7 @@ gantt
 
 - [ ] Dog/Camp/Sentry/창문/충전포트 등
 - [ ] 자동화 CRUD + 스케줄·지오펜스(1차)
-- [ ] **FR-V06a 공조 세밀 예약** (Plus 예고, Free 선포함)
+- [x] **FR-V06a 공조 세밀 예약** 기반 (모델·저장·30s 스케줄러·More 허브 UI · set_temps/열선 Fleet 세부는 후속)
 - [ ] FCM + 채널 + 절전 가이드
 - [ ] 다중 VIN 전환 UX
 
