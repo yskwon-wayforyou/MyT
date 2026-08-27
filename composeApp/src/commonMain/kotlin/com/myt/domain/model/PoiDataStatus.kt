@@ -16,4 +16,6 @@ data class PoiDataStatus(
     val manualUpdateRequired: Boolean = false,
     val updateReason: String? = null,
     val autoSyncFailed: Boolean = false,
+    /** Last sync success/failure detail for More hub (W2 SLA UX). */
+    val lastSyncDetail: String? = null,
 )

@@ -87,10 +87,19 @@ fun SpeedCamDataPanel(
                 color = colors.textSecondary,
                 fontSize = 12.sp,
             )
+            status.lastSyncDetail?.takeIf { !status.autoSyncFailed }?.let { detail ->
+                Text(
+                    detail,
+                    color = colors.textSecondary,
+                    fontSize = 12.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
             status.updateReason?.let { reason ->
                 Text(
                     reason,
-                    color = colors.textSecondary,
+                    color = if (status.autoSyncFailed) Color(0xFFFF6A00) else colors.textSecondary,
                     fontSize = 12.sp,
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,

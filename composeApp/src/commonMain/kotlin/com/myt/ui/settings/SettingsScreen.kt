@@ -50,6 +50,7 @@ import com.myt.domain.model.GaugeLayoutMode
 import com.myt.domain.model.PressureUnit
 import com.myt.domain.model.labelKo
 import com.myt.domain.usecase.AuthUseCase
+import com.myt.platform.BatteryOptimizationPlatform
 import com.myt.ui.theme.GaugeTheme
 import com.myt.ui.theme.TeslaCard
 import com.myt.ui.theme.TeslaScreen
@@ -75,6 +76,7 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
 ) {
     val authUseCase = koinInject<AuthUseCase>()
+    val batteryOptimization = koinInject<BatteryOptimizationPlatform>()
     val scope = rememberCoroutineScope()
     var authTestMsg by remember { mutableStateOf<String?>(null) }
     var appId by remember { mutableStateOf(teslaConfig.appId) }
@@ -220,6 +222,42 @@ fun SettingsScreen(
                             fontSize = 12.sp,
                             modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 12.dp),
                         )
+                    }
+                }
+                SectionTitle("Bluetooth · 자동 실행")
+                TeslaCard(modifier = Modifier.fillMaxWidth(), accent = colors.accentBlue) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            "백그라운드에서 Phone Key 감지",
+                            color = colors.textPrimary,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp,
+                        )
+                        Text(
+                            "일부 제조사 배터리 절전 때문에 차량 연결 시 자동 실행이 막힐 수 있어요. MyT를 배터리 최적화 예외로 두면 안정적입니다.",
+                            color = colors.textSecondary,
+                            fontSize = 12.sp,
+                        )
+                        var batteryHint by remember { mutableStateOf<String?>(null) }
+                        Button(
+                            onClick = {
+                                val opened = batteryOptimization.openBatteryOptimizationSettings()
+                                batteryHint = if (opened) {
+                                    "시스템 설정을 열었습니다. MyT를 최적화 예외로 허용해 주세요."
+                                } else {
+                                    "이 기기에서는 설정 화면을 열 수 없습니다. 앱 정보 → 배터리에서 직접 예외를 허용해 주세요."
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colors.accentBlue,
+                                contentColor = colors.bg,
+                            ),
+                        ) {
+                            Text("배터리 예외 설정 열기", fontSize = 13.sp)
+                        }
+                        batteryHint?.let {
+                            Text(it, color = colors.textSecondary, fontSize = 12.sp)
+                        }
                     }
                 }
                 SectionTitle("계기판 표시 항목")

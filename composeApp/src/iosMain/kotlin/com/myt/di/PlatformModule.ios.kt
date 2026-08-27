@@ -1,6 +1,7 @@
 package com.myt.di
 
 import com.myt.platform.AppInfoPlatform
+import com.myt.platform.BatteryOptimizationPlatform
 import com.myt.platform.LogExportPlatform
 import com.myt.data.local.DatabaseDriverFactory
 import com.myt.platform.AudioAlertPlatform
@@ -28,6 +29,7 @@ actual fun platformModule() = module {
     single { DeviceCommunicationsPlatform(Unit) }
     single { TextToSpeechPlatform(Unit) }
     single { AppInfoPlatform(Unit) }
+    single { BatteryOptimizationPlatform(Unit) }
     single { LogExportPlatform(Unit) }
     single { com.myt.debug.IosPersistentLogSink() }
     single<com.myt.debug.PersistentLogSink> { get<com.myt.debug.IosPersistentLogSink>() }

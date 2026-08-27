@@ -62,6 +62,9 @@ class PoiOtaSyncUseCase(
 
             val csvText = httpClient.get(url).bodyAsText()
             val cameras = parser.parseSpeedCameras(csvText)
+            if (cameras.isEmpty()) {
+                error("CSV에 단속 카메라가 없습니다. URL·형식을 확인해 주세요.")
+            }
             withContext(Dispatchers.Default) { upsertAll(cameras) }
             settings.putLong(KEY_LAST_SYNC_MS, nowMs)
             if (remoteFp != null) {
@@ -70,10 +73,13 @@ class PoiOtaSyncUseCase(
                 settings.putString(KEY_LOCAL_FINGERPRINT, "count:${cameras.size}:${csvText.hashCode()}")
             }
             settings.putBoolean(KEY_AUTO_SYNC_FAILED, false)
+            settings.putString(KEY_LAST_SYNC_DETAIL, "전국 데이터 ${cameras.size}건 반영")
             PoiSyncOutcome.Updated(cameras.size)
         }.getOrElse { error ->
+            val message = error.message ?: error.toString()
             settings.putBoolean(KEY_AUTO_SYNC_FAILED, true)
-            PoiSyncOutcome.Failed(error.message ?: error.toString())
+            settings.putString(KEY_LAST_SYNC_DETAIL, message)
+            PoiSyncOutcome.Failed(message)
         }
     }
 
@@ -87,6 +93,9 @@ class PoiOtaSyncUseCase(
             val remoteFp = fetchRemoteFingerprint(url)
             val csvText = httpClient.get(url).bodyAsText()
             val cameras = parser.parseSpeedCameras(csvText)
+            if (cameras.isEmpty()) {
+                error("CSV에 단속 카메라가 없습니다. URL·형식을 확인해 주세요.")
+            }
             withContext(Dispatchers.Default) { upsertAll(cameras) }
             val nowMs = clock.now().toEpochMilliseconds()
             settings.putLong(KEY_LAST_SYNC_MS, nowMs)
@@ -99,9 +108,11 @@ class PoiOtaSyncUseCase(
                 settings.putString(KEY_REMOTE_FINGERPRINT, fp)
             }
             settings.putBoolean(KEY_AUTO_SYNC_FAILED, false)
+            settings.putString(KEY_LAST_SYNC_DETAIL, "전국 데이터 ${cameras.size}건 반영")
             cameras.size
-        }.onFailure {
+        }.onFailure { error ->
             settings.putBoolean(KEY_AUTO_SYNC_FAILED, true)
+            settings.putString(KEY_LAST_SYNC_DETAIL, error.message ?: error.toString())
         }
     }
 
@@ -125,6 +136,7 @@ class PoiOtaSyncUseCase(
         const val KEY_LOCAL_FINGERPRINT = "poi_ota_local_fp_v1"
         const val KEY_REMOTE_FINGERPRINT = "poi_ota_remote_fp_v1"
         const val KEY_AUTO_SYNC_FAILED = "poi_ota_auto_sync_failed_v1"
+        const val KEY_LAST_SYNC_DETAIL = "poi_ota_last_sync_detail_v1"
         private const val MIN_INTERVAL_MS = 7L * 24 * 60 * 60 * 1000
     }
 }
