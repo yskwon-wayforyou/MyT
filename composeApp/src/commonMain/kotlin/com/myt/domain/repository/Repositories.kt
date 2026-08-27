@@ -9,6 +9,12 @@ interface FleetRepository {
     suspend fun fetchVehicleState(vin: String): Result<GaugeState>
     suspend fun sendNavigationRequest(vin: String, destination: String): Result<Unit>
     suspend fun wakeVehicle(vin: String): Result<Unit>
+    /** Fleet signed/unsigned vehicle command path name, e.g. `door_lock`. */
+    suspend fun sendVehicleCommand(
+        vin: String,
+        commandName: String,
+        whichTrunk: String? = null,
+    ): Result<Unit>
 }
 
 interface PoiRepository {

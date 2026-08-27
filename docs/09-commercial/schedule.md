@@ -40,11 +40,11 @@ gantt
 
 ### W1 — Fleet · Auth 테스트 (즉시)
 
-- [ ] `FleetVehicleControlGateway` (Demo 교체)
-- [ ] 실차 Lock/Climate/Trunk/Flash/Honk + Safety gate
-- [ ] OAuth refresh 안정화, VK 페어링 **테스트** UX
-- [ ] 명령 서명/프록시 (필요 시), API 비용 가드 런타임
-- [ ] 음성 `navigation_request` 실경로 스모크
+- [x] `FleetVehicleControlGateway` (Demo 교체 + Selecting)
+- [x] 실차 Lock/Climate/Trunk/Flash/Honk REST 경로 + Safety gate
+- [x] OAuth refresh 테스트 UI (설정 Auth 테스트)
+- [x] VK 공개키 URL 안내 (페어링 UX·서명 프록시는 후속)
+- [ ] 음성 `navigation_request` 실경로 스모크 (기존 경로 유지 · 실차 확인)
 
 ### W2 — 운전 중 경험 품질
 

@@ -14,6 +14,7 @@ import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
@@ -69,9 +70,40 @@ class TeslaFleetApi(
                     value = destination,
                 ),
             )
-        }
+        }.ensureSuccess("navigation_request")
+    }
+
+    /**
+     * POST `/api/1/vehicles/{vin}/command/{commandName}`.
+     * Signed commands may return 403 until Virtual Key / vehicle-command proxy is ready.
+     * @param whichTrunk `rear` / `front` when [commandName] is `actuate_trunk`
+     */
+    suspend fun sendVehicleCommand(
+        accessToken: String,
+        vin: String,
+        commandName: String,
+        whichTrunk: String? = null,
+    ) {
+        httpClient.post("$baseUrl/api/1/vehicles/$vin/command/$commandName") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            if (whichTrunk != null) {
+                contentType(ContentType.Application.Json)
+                setBody(ActuateTrunkBody(whichTrunk))
+            }
+        }.ensureSuccess(commandName)
     }
 }
+
+private suspend fun io.ktor.client.statement.HttpResponse.ensureSuccess(label: String) {
+    if (status.value in 200..299) return
+    val text = runCatching { bodyAsText() }.getOrDefault("")
+    throw IllegalStateException("Fleet $label failed: HTTP ${status.value} $text")
+}
+
+@Serializable
+data class ActuateTrunkBody(
+    @SerialName("which_trunk") val whichTrunk: String,
+)
 
 @Serializable
 private data class NavigationRequestBody(

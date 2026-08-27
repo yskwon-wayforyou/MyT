@@ -31,6 +31,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,9 +49,13 @@ import com.myt.domain.model.GaugeField
 import com.myt.domain.model.GaugeLayoutMode
 import com.myt.domain.model.PressureUnit
 import com.myt.domain.model.labelKo
+import com.myt.domain.usecase.AuthUseCase
 import com.myt.ui.theme.GaugeTheme
 import com.myt.ui.theme.TeslaCard
 import com.myt.ui.theme.TeslaScreen
+import com.myt.ui.theme.accentBlue
+import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -69,6 +74,9 @@ fun SettingsScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val authUseCase = koinInject<AuthUseCase>()
+    val scope = rememberCoroutineScope()
+    var authTestMsg by remember { mutableStateOf<String?>(null) }
     var appId by remember { mutableStateOf(teslaConfig.appId) }
     var clientId by remember { mutableStateOf(teslaConfig.clientId) }
     var clientSecret by remember { mutableStateOf(teslaConfig.clientSecret) }
@@ -303,6 +311,32 @@ fun SettingsScreen(
                         )
                     }
                 }
+                SectionTitle("Auth 테스트 (W1)")
+                Text(
+                    "토큰 갱신과 Virtual Key 공개키 URL을 확인합니다. 서명 명령은 VK 페어링 후 동작합니다.",
+                    color = colors.textSecondary,
+                    fontSize = 12.sp,
+                )
+                TeslaCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    authTestMsg = authUseCase.runAuthSelfTest().summary()
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colors.surfaceHigh,
+                                contentColor = colors.textPrimary,
+                            ),
+                        ) {
+                            Text("토큰·VK 안내 실행", color = colors.accentBlue)
+                        }
+                        authTestMsg?.let {
+                            Text(it, color = colors.textSecondary, fontSize = 12.sp)
+                        }
+                    }
+                }
                 SectionTitle("Tesla properties")
                 Text(
                     "tesla.local.properties 값을 기기에서 확인하고 고칩니다. 저장하면 바로 반영됩니다.",
@@ -477,6 +511,9 @@ private fun PreferenceSwitch(
     onCheckedChange: (Boolean) -> Unit,
 ) {
     val colors = GaugeTheme.colors
+    val authUseCase = koinInject<AuthUseCase>()
+    val scope = rememberCoroutineScope()
+    var authTestMsg by remember { mutableStateOf<String?>(null) }
     Row(
         modifier = Modifier
             .fillMaxWidth()

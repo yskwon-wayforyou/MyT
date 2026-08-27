@@ -60,7 +60,9 @@ import com.myt.domain.automation.AutomationRepository
 import com.myt.domain.automation.LocalAutomationEngine
 import com.myt.domain.automation.LocalAutomationRepository
 import com.myt.domain.control.DemoVehicleControlGateway
+import com.myt.domain.control.FleetVehicleControlGateway
 import com.myt.domain.control.SafetyGatedVehicleControl
+import com.myt.domain.control.SelectingVehicleControlGateway
 import com.myt.domain.control.VehicleControlGateway
 import com.myt.domain.usecase.TelemetryUseCase
 import com.myt.domain.usecase.VoiceCommandUseCase
@@ -178,9 +180,15 @@ val domainModule = module {
     }
     single { RoadSnapUseCase(get(), get()) }
     single { DemoVehicleControlGateway(get(), get()) }
+    single { FleetVehicleControlGateway(get(), get()) }
     single<VehicleControlGateway> {
         SafetyGatedVehicleControl(
-            gateway = get<DemoVehicleControlGateway>(),
+            gateway = SelectingVehicleControlGateway(
+                fleet = get(),
+                demo = get(),
+                telemetryUseCase = get(),
+                tokenRepository = get(),
+            ),
             isDriving = {
                 val state = get<TelemetryUseCase>().gaugeState.value
                 state.speedKmh >= 3f || state.gear == com.myt.domain.model.Gear.DRIVE

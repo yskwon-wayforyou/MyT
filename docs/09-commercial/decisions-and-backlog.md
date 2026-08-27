@@ -81,11 +81,11 @@ flowchart LR
 
 | ID | 항목 | 구체화 | 현상태 | 구현 계획 | Wave |
 |---|---|---|---|---|---|
-| V01 | 잠금/해제 | Fleet command | ◐ 데모 | `FleetVehicleControlGateway` + 토큰·웨이크·재시도 | **W1** |
-| V06 | 공조 ON/OFF | 동일 | ◐ 데모 | 실 API + 상태 폴링 반영 | **W1** |
-| V03/V13 | 트렁크·프렁크·경적·플래시 | 동일 | ◐ 데모 | 실 API; Safety gate 유지 | **W1** |
-| M31 | 안전 게이트 | 주행 중 위험 명령 차단 | ● | 실명령과 E2E 테스트 유지 | W1 |
-| M30 | Quick Controls UI | 차량 상세 | ● | 데모 문구 제거, 실결과 토스트/에러 | W1 |
+| V01 | 잠금/해제 | Fleet command | ● REST 경로 | `FleetVehicleControlGateway` + Selecting(시뮬→데모); VK 서명 403 시 안내 | **W1** |
+| V06 | 공조 ON/OFF | 동일 | ● REST | 실 API | **W1** |
+| V03/V13 | 트렁크·프렁크·경적·플래시 | 동일 | ● REST | 실 API; Safety gate 유지 | **W1** |
+| M31 | 안전 게이트 | 주행 중 위험 명령 차단 | ● | 유지 | W1 |
+| M30 | Quick Controls UI | 차량 상세 | ● | Fleet/데모 안내 문구 갱신 | W1 |
 | V02 | Remote Start | | ○ | W3 패리티 | W3 |
 | V04 | 창문 | | ○ | W3 | W3 |
 | V07 | 공조 온도 설정 | | ○ | W3 | W3 |
@@ -98,9 +98,9 @@ flowchart LR
 
 | ID | 항목 | 구체화 | 현상태 | 구현 계획 | Wave |
 |---|---|---|---|---|---|
-| AUTH-01 | OAuth PKCE · refresh · revoke | 개인/테스트 클라이언트 | ◐ | 안정 refresh, 만료 UX, 멀티계정 준비(단일 유저 우선) | **W1** |
-| AUTH-02 | Virtual Key 페어링 테스트 UX | 공개키·도메인(개인/스테이징) | ○ | 테스트 도메인 키 호스팅, 페어링·실패 복구 화면 | **W1** |
-| AUTH-03 | Command 서명 / 프록시 | 실차 명령에 필요 시 | ○ | 로컬/백엔드 서명 경로, 시뮬 대체 가능 시 병행 | **W1** |
+| AUTH-01 | OAuth PKCE · refresh · revoke | 개인/테스트 클라이언트 | ◐ | 설정 Auth 테스트 + ensureFreshAccessToken | **W1** |
+| AUTH-02 | Virtual Key 페어링 테스트 UX | 공개키·도메인(개인/스테이징) | ◐ | 공개키 URL 안내 완료 · 페어링 UX 후속 | **W1** |
+| AUTH-03 | Command 서명 / 프록시 | 실차 명령에 필요 시 | ○ | 403 시 안내 · vehicle-command 프록시 후속 | **W1** |
 | AUTH-04 | 위치 scope 고지 | 차량 UI 아이콘 안내 | ○ | 온보딩 카피·설정 링크 | W1, W5 |
 | AUTH-05 | API 비용 가드 | 월 크레딧·한도 | ◐ 설계 | 런타임 차단·UI | W1–W2 |
 | WP-01 | Tesla Partner 상용 등록 | 법인·멀티유저 상용 | ○ | **W5 안정화 후 재검토** | **WP** |

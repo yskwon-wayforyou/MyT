@@ -42,7 +42,7 @@ fun QuickControlsPanel(
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text("퀵 컨트롤 (M30)", color = colors.textPrimary, fontWeight = FontWeight.SemiBold)
             Text(
-                "주행 중 안전 게이트가 적용됩니다. Fleet 명령 프록시는 Phase 2에서 연결됩니다.",
+                "시뮬/미로그인 시 데모 · 로그인 시 Fleet 실명령(서명·VK 필요 시 안내). 주행 중 Unlock/Trunk/Frunk 차단.",
                 color = colors.textSecondary,
                 fontSize = 12.sp,
             )

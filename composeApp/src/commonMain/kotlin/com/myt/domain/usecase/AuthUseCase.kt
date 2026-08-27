@@ -86,8 +86,49 @@ class AuthUseCase(
         settingsRepository.setOnboardingComplete(false)
     }
 
+    /** W1 Auth 테스트 — 토큰 갱신 + Virtual Key 공개키 URL 안내. */
+    suspend fun runAuthSelfTest(): AuthSelfTestReport {
+        val authed = tokenRepository.isAuthenticated()
+        val refresh = if (!authed) {
+            "미로그인 — 온보딩에서 Tesla 로그인 필요"
+        } else {
+            ensureFreshAccessToken().fold(
+                onSuccess = { "토큰 갱신 OK · …${it.takeLast(8)}" },
+                onFailure = { "토큰 갱신 실패: ${it.message}" },
+            )
+        }
+        val domain = config.partnerDomain.trim()
+        val keyHint = if (domain.isBlank()) {
+            "partnerDomain 미설정 — tesla.local.properties에 도메인 후 공개키 호스팅"
+        } else {
+            "https://$domain/.well-known/appspecific/com.tesla.3p.public-key.pem"
+        }
+        return AuthSelfTestReport(
+            authenticated = authed,
+            tokenStatus = refresh,
+            virtualKeyPublicKeyUrl = keyHint,
+            vin = settingsRepository.getVin() ?: config.vehicleVin.ifBlank { null },
+        )
+    }
+
     companion object {
         private const val KEY_ACCESS = "access_token"
         private const val KEY_REFRESH = "refresh_token"
+    }
+}
+
+data class AuthSelfTestReport(
+    val authenticated: Boolean,
+    val tokenStatus: String,
+    val virtualKeyPublicKeyUrl: String,
+    val vin: String?,
+) {
+    fun summary(): String = buildString {
+        append(if (authenticated) "로그인됨" else "미로그인")
+        append(" · ")
+        append(tokenStatus)
+        append("\nVK 공개키: ")
+        append(virtualKeyPublicKeyUrl)
+        vin?.let { append("\nVIN …${it.takeLast(6)}") }
     }
 }

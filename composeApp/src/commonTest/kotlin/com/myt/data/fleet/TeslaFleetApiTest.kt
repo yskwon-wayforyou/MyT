@@ -70,4 +70,52 @@ class TeslaFleetApiTest {
         assertEquals(72f, state.socPercent, 0.1f)
         assertEquals(true, state.locked)
     }
+
+    @Test
+    fun sendVehicleCommand_postsDoorLock() = runBlocking {
+        var path = ""
+        val engine = MockEngine { request ->
+            path = request.url.encodedPath
+            respond(
+                content = """{"response":{"result":true}}""",
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, "application/json"),
+            )
+        }
+        val client = HttpClient(engine) {
+            install(ContentNegotiation) {
+                json(Json { ignoreUnknownKeys = true })
+            }
+        }
+        val api = TeslaFleetApi(
+            httpClient = client,
+            baseUrlProvider = { "https://fleet-api.test" },
+        )
+        api.sendVehicleCommand("token", "VIN123456789012345", "door_lock")
+        assertTrue(path.contains("/command/door_lock"))
+    }
+
+    @Test
+    fun sendVehicleCommand_actuateTrunkPath() = runBlocking {
+        var path = ""
+        val engine = MockEngine { request ->
+            path = request.url.encodedPath
+            respond(
+                content = """{"response":{"result":true}}""",
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, "application/json"),
+            )
+        }
+        val client = HttpClient(engine) {
+            install(ContentNegotiation) {
+                json(Json { ignoreUnknownKeys = true })
+            }
+        }
+        val api = TeslaFleetApi(
+            httpClient = client,
+            baseUrlProvider = { "https://fleet-api.test" },
+        )
+        api.sendVehicleCommand("token", "VIN123456789012345", "actuate_trunk", whichTrunk = "rear")
+        assertTrue(path.contains("/command/actuate_trunk"))
+    }
 }
