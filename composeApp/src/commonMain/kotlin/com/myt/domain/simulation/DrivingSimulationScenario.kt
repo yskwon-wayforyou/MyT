@@ -106,7 +106,7 @@ object DrivingSimulationScenarios {
 
     private fun approachSpeedCamL3(): DrivingSimulationScenario {
         val label = "과속카메라 L3 접근 (광교중앙로)"
-        // 북쪽 ~550m → cam-su-003 통과, 95km/h (한도 60)
+        // 북쪽 ~550m → cam-su-003 통과, 95km/h (한도 60) · 헤딩은 프레임 간 진행 방위
         val frames = buildList {
             var lat = 37.2900
             val lng = CAM_LNG
@@ -117,17 +117,19 @@ object DrivingSimulationScenarios {
                     i < 120 -> 95f
                     else -> (95f - (i - 120) * 12f).coerceAtLeast(0f)
                 }
+                val nextLat = lat + stepLat
+                val heading = bearingDegrees(lat, lng, nextLat, lng)
                 add(
                     base(
                         speedKmh = speed,
                         gear = if (speed < 3f) Gear.PARK else Gear.DRIVE,
                         lat = lat,
                         lng = lng,
-                        heading = 180f,
+                        heading = heading,
                         scenarioLabel = label,
                     ),
                 )
-                lat += stepLat
+                lat = nextLat
             }
         }
         return DrivingSimulationScenario(
@@ -141,12 +143,16 @@ object DrivingSimulationScenarios {
     private fun highwayWithNav(): DrivingSimulationScenario {
         val label = "고속 주행 + 내비 (광교→판교)"
         val frames = (0 until 80).map { i ->
+            val lat = GWANGGYO_JUNGANG_LAT + i * 0.00035
+            val lng = GWANGGYO_JUNGANG_LNG + i * 0.00045
+            val nextLat = GWANGGYO_JUNGANG_LAT + (i + 1) * 0.00035
+            val nextLng = GWANGGYO_JUNGANG_LNG + (i + 1) * 0.00045
             base(
                 speedKmh = 100f,
                 gear = Gear.DRIVE,
-                lat = GWANGGYO_JUNGANG_LAT + i * 0.00035,
-                lng = GWANGGYO_JUNGANG_LNG + i * 0.00045,
-                heading = 45f,
+                lat = lat,
+                lng = lng,
+                heading = bearingDegrees(lat, lng, nextLat, nextLng),
                 scenarioLabel = label,
                 nav = NavInfo(
                     destinationName = "판교역",

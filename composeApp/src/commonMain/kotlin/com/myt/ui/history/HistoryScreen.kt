@@ -478,6 +478,7 @@ private fun TripDetailDialog(
 @Composable
 private fun ChargeDetailDialog(item: ChargeHistoryItem, onDismiss: () -> Unit) {
     val colors = GaugeTheme.colors
+    val ledger = com.myt.domain.ledger.ChargeLedgerClassifier.toEntry(item)
     val durationMin = item.endedAtMs?.let { end ->
         ((end - item.startedAtMs) / 60_000).coerceAtLeast(1)
     }
@@ -486,7 +487,17 @@ private fun ChargeDetailDialog(item: ChargeHistoryItem, onDismiss: () -> Unit) {
         title = { Text("충전 상세 · ${formatTime(item.startedAtMs)}", color = colors.textPrimary) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    "유형 ${com.myt.domain.ledger.ChargeLedgerClassifier.kindLabelKo(ledger.kind)}",
+                    color = colors.accentBlue,
+                    fontSize = 12.sp,
+                )
                 Text("에너지 ${"%.1f".format(item.energyKwh ?: 0f)} kWh", color = colors.textPrimary, fontSize = 12.sp)
+                Text(
+                    "추정 비용 ${ledger.estimatedCostKrw?.let { "%,.0f원".format(it) } ?: "--"} · 단가 ${ledger.rateKrwPerKwh.toInt()}원/kWh",
+                    color = colors.textPrimary,
+                    fontSize = 12.sp,
+                )
                 Text("SOC ${item.startSoc.toInt()} → ${item.endSoc?.toInt() ?: "--"}", color = colors.textSecondary, fontSize = 12.sp)
                 Text("Peak ${item.peakKw?.toInt() ?: "--"} kW", color = colors.textSecondary, fontSize = 12.sp)
                 durationMin?.let { Text("소요 ${it}분", color = colors.textSecondary, fontSize = 12.sp) }

@@ -84,12 +84,11 @@ fun SchematicMapView(
                 val dLng = (m.longitude - longitude) * 111_320.0 * cos(latitude * PI / 180.0)
                 val mx = cx + (dLng * ppm).toFloat()
                 val my = cy - (dLat * ppm).toFloat()
-                val color = when (m.kind) {
-                    "camera" -> Color(0xFFFF6A00)
-                    "dest" -> Color(0xFF30D158)
-                    else -> Color(0xFF64D2FF)
+                when (m.kind) {
+                    "camera" -> drawSpeedCameraIcon(Offset(mx, my))
+                    "dest" -> drawCircle(color = Color(0xFF30D158), radius = 8f, center = Offset(mx, my))
+                    else -> drawCircle(color = Color(0xFF64D2FF), radius = 7f, center = Offset(mx, my))
                 }
-                drawCircle(color = color, radius = 8f, center = Offset(mx, my))
             }
 
             rotate(heading, Offset(cx, cy)) {
@@ -123,4 +122,36 @@ fun SchematicMapView(
             )
         }
     }
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawSpeedCameraIcon(center: Offset) {
+    val body = Color(0xFFFF8A3D)
+    val lens = Color(0xFF64D2FF)
+    val w = 14f
+    val h = 10f
+    drawRoundRect(
+        color = body,
+        topLeft = Offset(center.x - w / 2f, center.y - h / 2f - 2f),
+        size = androidx.compose.ui.geometry.Size(w, h),
+        cornerRadius = androidx.compose.ui.geometry.CornerRadius(2f, 2f),
+    )
+    // Lens
+    drawCircle(color = Color(0xFF0A1018), radius = 3.2f, center = Offset(center.x - 1f, center.y - 2f))
+    drawCircle(color = lens, radius = 1.8f, center = Offset(center.x - 1f, center.y - 2f))
+    // Flash / side
+    val flash = Path().apply {
+        moveTo(center.x + w / 2f - 1f, center.y - h / 2f)
+        lineTo(center.x + w / 2f + 5f, center.y - h / 2f - 2f)
+        lineTo(center.x + w / 2f + 5f, center.y + 2f)
+        lineTo(center.x + w / 2f - 1f, center.y + h / 2f - 2f)
+        close()
+    }
+    drawPath(flash, color = Color(0xFFFFB020))
+    // Pole
+    drawLine(
+        color = Color(0xFF1A1A1A),
+        start = Offset(center.x, center.y + h / 2f - 2f),
+        end = Offset(center.x, center.y + h / 2f + 8f),
+        strokeWidth = 2.5f,
+    )
 }

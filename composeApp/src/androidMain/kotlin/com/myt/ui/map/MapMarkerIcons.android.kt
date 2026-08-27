@@ -22,7 +22,7 @@ internal object MapMarkerIcons {
 
     fun cameraIcon(context: Context): Drawable {
         val drawable = requireNotNull(ContextCompat.getDrawable(context, R.drawable.ic_map_speed_camera))
-        val sizePx = (26 * context.resources.displayMetrics.density).toInt().coerceAtLeast(20)
+        val sizePx = (32 * context.resources.displayMetrics.density).toInt().coerceAtLeast(28)
         return BitmapDrawable(context.resources, drawable.toBitmap(sizePx, sizePx))
     }
 

@@ -55,6 +55,7 @@ fun AnalyticsScreen(
     val exportMsg by viewModel.exportMessage.collectAsState()
     val liveCamera by viewModel.liveCamera.collectAsState()
     val cameraFrames by viewModel.cameraFrames.collectAsState()
+    val chargeLedger by viewModel.chargeLedger.collectAsState()
     val fsd = FsdAnalytics.summary()
 
     LaunchedEffect(configuredVin) {
@@ -74,6 +75,31 @@ fun AnalyticsScreen(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("고급 분석", color = colors.textPrimary, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                 TextButton(onClick = onBack) { Text("닫기", color = colors.accentBlue) }
+            }
+
+            TeslaCard(accent = Color(0xFFFFB020)) {
+                Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("충전 차계부 (W4)", color = colors.textPrimary, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        "${chargeLedger.periodLabel} · ${"%.1f".format(chargeLedger.totalKwh)} kWh · %,d원".format(
+                            chargeLedger.totalCostKrw.toInt(),
+                        ),
+                        color = colors.textSecondary,
+                        fontSize = 13.sp,
+                    )
+                    chargeLedger.byKind.entries.sortedByDescending { it.value.second }.forEach { (kind, pair) ->
+                        Text(
+                            "${com.myt.domain.ledger.ChargeLedgerClassifier.kindLabelKo(kind)} · ${"%.1f".format(pair.first)} kWh · %,d원".format(
+                                pair.second.toInt(),
+                            ),
+                            color = colors.textPrimary,
+                            fontSize = 12.sp,
+                        )
+                    }
+                    if (chargeLedger.byKind.isEmpty()) {
+                        Text("충전 세션이 쌓이면 SC/홈/공용 합산이 표시됩니다.", color = colors.textSecondary, fontSize = 12.sp)
+                    }
+                }
             }
 
             TeslaCard(accent = Color(0xFF30D158)) {

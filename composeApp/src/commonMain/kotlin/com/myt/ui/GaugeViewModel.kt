@@ -13,6 +13,7 @@ import com.myt.domain.VehicleConfig
 import com.myt.domain.model.ConnectionStatus
 import com.myt.domain.model.GaugeDisplayPrefs
 import com.myt.domain.model.GaugeState
+import com.myt.domain.map.MapDisplayPolicy
 import com.myt.domain.model.Gear
 import com.myt.domain.model.LayoutConfig
 import com.myt.domain.model.PoiDataStatus
@@ -387,14 +388,21 @@ class GaugeViewModel(
             lastMapSnapKey = null
             return
         }
-        val snapKey = "${"%.4f".format(lat)}:${"%.4f".format(lng)}"
-        if (snapKey != lastMapSnapKey) {
-            lastMapSnapKey = snapKey
-            _mapDisplayLocation.value = roadSnapUseCase.snap(lat, lng)
+        val display = if (MapDisplayPolicy.shouldApplyRoadSnap(state)) {
+            val snapKey = "${"%.4f".format(lat)}:${"%.4f".format(lng)}"
+            if (snapKey != lastMapSnapKey) {
+                lastMapSnapKey = snapKey
+                _mapDisplayLocation.value = roadSnapUseCase.snap(lat, lng)
+            }
+            _mapDisplayLocation.value ?: (lat to lng)
+        } else {
+            // Parked / indoor crawl / simulation: show raw GPS — no road snap.
+            lastMapSnapKey = null
+            _mapDisplayLocation.value = lat to lng
+            lat to lng
         }
-        val snapped = _mapDisplayLocation.value ?: (lat to lng)
         val radius = mapOverlayRadiusMeters(state, alert)
-        val cameras = poiRepository.findNearbyCameras(snapped.first, snapped.second, radius)
+        val cameras = poiRepository.findNearbyCameras(display.first, display.second, radius)
         val markers = cameras.map { cam ->
             LiveMapMarker(
                 latitude = cam.latitude,

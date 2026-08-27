@@ -320,21 +320,21 @@ private fun PrimaryDriveGauge(
     )
     GlassPane(
         modifier = modifier,
-        glow = Color(0xFF3D9EFF),
+        glow = if (chargingMode) Color(0xFF30D158) else Color(0xFF3D9EFF),
         content = {
-            if (chargingMode) {
-                ChargingPrimaryContent(state = state, colors = colors)
-            } else {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    DualNeonArcs(
-                        progress = arcProgress,
-                        warn = (state.powerKw ?: 0f) > 120f,
-                        glowAlpha = glowPulse,
-                        modifier = Modifier.fillMaxSize().padding(4.dp),
-                    )
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                DualNeonArcs(
+                    progress = arcProgress,
+                    warn = if (chargingMode) false else (state.powerKw ?: 0f) > 120f,
+                    glowAlpha = glowPulse,
+                    modifier = Modifier.fillMaxSize().padding(4.dp),
+                )
+                if (chargingMode) {
+                    ChargingPrimaryContent(state = state, colors = colors)
+                } else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         TurnSignalRow(state = state)
                         if (showGear) GearPill(state.gear)
@@ -368,57 +368,73 @@ private fun ChargingPrimaryContent(
     colors: com.myt.ui.theme.GaugeColors,
 ) {
     val charge = state.charging
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 10.dp, vertical = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        TurnSignalRow(state = state)
-        StatusIconLabel(
-            icon = ClusterIcons.charging,
-            label = "CHARGING",
-            color = colors.socGreen,
-            iconSize = 16.dp,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-        )
+    // Dial-style center (like speed) so DualNeonArcs stay readable — metrics sit below the arc.
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.Center,
+                .align(Alignment.Center)
+                .padding(horizontal = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            TurnSignalRow(state = state)
             Text(
                 "${state.socPercent.toInt()}",
                 color = Color.White,
-                fontSize = 78.sp,
+                fontSize = 72.sp,
                 fontWeight = FontWeight.Black,
-                lineHeight = 78.sp,
+                lineHeight = 72.sp,
             )
-            Text("%", color = Color(0xFF30D158), fontSize = 18.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
             Text(
-                "주행 가능 ${state.rangeKm.toInt()} km",
+                "%",
+                color = Color(0xFF30D158),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 2.sp,
+            )
+            Text(
+                "CHARGING · ${state.rangeKm.toInt()} km",
                 color = colors.textSecondary,
-                fontSize = 14.sp,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
             )
         }
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            ChargeMetricRow(
-                left = "충전 속도" to (charge?.chargeRateKw?.let { "${"%.1f".format(it)} kW" } ?: "--"),
-                right = "완충까지" to (charge?.timeToFullMinutes?.let { "${it}분" } ?: "--"),
+            CompactChargeChip(
+                charge?.chargeRateKw?.let { "${"%.1f".format(it)} kW" } ?: "--",
+                Modifier.weight(1f),
             )
-            ChargeMetricRow(
-                left = "한도" to (charge?.chargeLimitPercent?.let { "$it%" } ?: "--"),
-                right = "상태" to (charge?.chargingState?.takeIf { it.isNotBlank() } ?: "Charging"),
+            CompactChargeChip(
+                charge?.timeToFullMinutes?.let { "${it}분" } ?: "--",
+                Modifier.weight(1f),
+            )
+            CompactChargeChip(
+                charge?.chargeLimitPercent?.let { "한도 $it%" } ?: "--",
+                Modifier.weight(1f),
             )
         }
     }
+}
+
+@Composable
+private fun CompactChargeChip(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text,
+        color = Color.White.copy(alpha = 0.9f),
+        fontSize = 11.sp,
+        fontWeight = FontWeight.SemiBold,
+        textAlign = TextAlign.Center,
+        maxLines = 1,
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xCC0A1018))
+            .padding(horizontal = 6.dp, vertical = 6.dp),
+    )
 }
 
 @Composable

@@ -231,7 +231,12 @@ fun GaugeSinglePaneLayout(
                 .navigationBarsPadding(),
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
-                ConnectionErrorBanner(kind = errorKind, onRetry = onRetry, onDismissHome = onHome)
+                ConnectionErrorBanner(
+                    kind = errorKind,
+                    onRetry = onRetry,
+                    onDismissHome = onHome,
+                    detail = quotaSnapshot.lastDenialReason,
+                )
                 DriveSafetyBanner(
                     visible = showDriveSafetyBanner,
                     onAcknowledge = onAcknowledgeDriveSafety,
@@ -300,7 +305,12 @@ fun GaugeLandscapeLayout(
                 .navigationBarsPadding(),
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
-                ConnectionErrorBanner(kind = errorKind, onRetry = onRetry, onDismissHome = onHome)
+                ConnectionErrorBanner(
+                    kind = errorKind,
+                    onRetry = onRetry,
+                    onDismissHome = onHome,
+                    detail = quotaSnapshot.lastDenialReason,
+                )
                 DriveSafetyBanner(
                     visible = showDriveSafetyBanner,
                     onAcknowledge = onAcknowledgeDriveSafety,

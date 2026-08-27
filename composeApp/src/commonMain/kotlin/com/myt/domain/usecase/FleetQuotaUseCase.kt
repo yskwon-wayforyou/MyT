@@ -33,6 +33,8 @@ class FleetQuotaUseCase(
 
     private val mutex = Mutex()
     private var cached = PersistedFleetUsage()
+    private var lastSoftDailyDataAllowMs: Long = 0L
+    private var lastDenialReason: String? = null
     private val _snapshot = MutableStateFlow(emptySnapshot())
     val snapshot: StateFlow<QuotaSnapshot> = _snapshot.asStateFlow()
 
@@ -47,28 +49,57 @@ class FleetQuotaUseCase(
         cached = rollMonth(cached)
         val snap = toSnapshot(cached)
         _snapshot.value = snap
-        when {
+        val decision = when {
             snap.mode == QuotaMode.Blocked ->
-                QuotaDecision(false, QuotaMode.Blocked, "월 무료 한도 보호", 30 * 60_000L)
+                QuotaDecision(false, QuotaMode.Blocked, "월 무료 크레딧 95% 도달", 30 * 60_000L)
             category == FleetCallCategory.Data && snap.dataCount >= FleetQuotaPolicy.MONTHLY_DATA ->
-                QuotaDecision(false, snap.mode, "이번 달 Data 한도", 6 * 60 * 60_000L)
+                QuotaDecision(false, snap.mode, "이번 달 Data 한도(${FleetQuotaPolicy.MONTHLY_DATA})", 6 * 60 * 60_000L)
             category == FleetCallCategory.Command && snap.commandCount >= FleetQuotaPolicy.MONTHLY_COMMAND ->
                 QuotaDecision(false, snap.mode, "이번 달 Command 한도", 6 * 60 * 60_000L)
             category == FleetCallCategory.Wake && snap.wakeCount >= FleetQuotaPolicy.MONTHLY_WAKE ->
                 QuotaDecision(false, snap.mode, "이번 달 Wake 한도", 6 * 60 * 60_000L)
             category == FleetCallCategory.Data && snap.dailyDataCount >= FleetQuotaPolicy.DAILY_DATA ->
-                QuotaDecision(false, QuotaMode.Conserve, "오늘 Data 한도", 60 * 60_000L)
+                softDailyDataDecision(snap)
             category == FleetCallCategory.Wake && snap.dailyWakeCount >= FleetQuotaPolicy.DAILY_WAKE ->
-                QuotaDecision(false, QuotaMode.Conserve, "오늘 Wake 한도", 6 * 60 * 60_000L)
+                QuotaDecision(false, QuotaMode.Conserve, "오늘 Wake 한도(${FleetQuotaPolicy.DAILY_WAKE})", 6 * 60 * 60_000L)
             category == FleetCallCategory.Command && day(cached).command >= FleetQuotaPolicy.DAILY_COMMAND ->
                 QuotaDecision(false, QuotaMode.Conserve, "오늘 Command 한도", 60 * 60_000L)
             category == FleetCallCategory.Wake && snap.mode == QuotaMode.Conserve ->
                 QuotaDecision(false, QuotaMode.Conserve, "절약 모드에서 웨이크 금지", 6 * 60 * 60_000L)
             else -> QuotaDecision(true, snap.mode)
-        }.also { decision ->
-            if (!decision.allowed) {
-                debugLogger.w("Quota", "Denied $category: ${decision.reason}")
-            }
+        }
+        if (!decision.allowed) {
+            lastDenialReason = decision.reason
+            _snapshot.value = snap.copy(lastDenialReason = decision.reason)
+            debugLogger.w("Quota", "Denied $category: ${decision.reason}")
+        } else if (decision.reason != null) {
+            debugLogger.i("Quota", "Soft-allow $category: ${decision.reason}")
+        }
+        decision
+    }
+
+    /**
+     * Daily Data exhausted → still allow one poll every [SOFT_DAILY_DATA_INTERVAL_MS]
+     * so charging Complete / SOC can catch up without waiting until midnight.
+     */
+    private fun softDailyDataDecision(snap: QuotaSnapshot): QuotaDecision {
+        val now = clock.now().toEpochMilliseconds()
+        val elapsed = now - lastSoftDailyDataAllowMs
+        return if (elapsed >= FleetQuotaPolicy.SOFT_DAILY_DATA_INTERVAL_MS) {
+            lastSoftDailyDataAllowMs = now
+            QuotaDecision(
+                allowed = true,
+                mode = QuotaMode.Conserve,
+                reason = "오늘 Data soft 허용(${snap.dailyDataCount}/${FleetQuotaPolicy.DAILY_DATA})",
+            )
+        } else {
+            val retry = (FleetQuotaPolicy.SOFT_DAILY_DATA_INTERVAL_MS - elapsed).coerceAtLeast(60_000L)
+            QuotaDecision(
+                false,
+                QuotaMode.Conserve,
+                "오늘 Data 한도 ${snap.dailyDataCount}/${FleetQuotaPolicy.DAILY_DATA} · 약 ${(retry / 60_000L).coerceAtLeast(1)}분 후 재시도",
+                retry,
+            )
         }
     }
 
@@ -163,6 +194,7 @@ class FleetQuotaUseCase(
                     ok = it.ok,
                 )
             },
+            lastDenialReason = lastDenialReason,
         )
     }
 

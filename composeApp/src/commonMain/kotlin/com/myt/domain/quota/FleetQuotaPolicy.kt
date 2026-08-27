@@ -37,6 +37,8 @@ data class QuotaSnapshot(
     val mode: QuotaMode,
     val last7DaysUsd: List<Pair<String, Double>>,
     val recent: List<UsageEvent>,
+    /** Last deny reason for banner copy (daily vs monthly). */
+    val lastDenialReason: String? = null,
 )
 
 data class UsageEvent(
@@ -57,9 +59,16 @@ object FleetQuotaPolicy {
     const val MONTHLY_DATA = 3_000
     const val MONTHLY_COMMAND = 200
     const val MONTHLY_WAKE = 50
-    const val DAILY_DATA = 80
-    const val DAILY_WAKE = 2
-    const val DAILY_COMMAND = 8
+    /**
+     * App-side daily guards (Tesla has no published daily Data=80).
+     * Prior 80 was too tight for charging near-limit (45s) + UI refresh + regression
+     * and falsely showed 「한도 보호」 while monthly $ credit was still low.
+     */
+    const val DAILY_DATA = 300
+    const val DAILY_WAKE = 8
+    const val DAILY_COMMAND = 30
+    /** When daily Data is exhausted, still allow one poll this often (charging completion). */
+    const val SOFT_DAILY_DATA_INTERVAL_MS = 15 * 60_000L
 
     const val DRIVING_INTERVAL_MS = 60_000L
     const val PARKED_INTERVAL_MS = 300_000L

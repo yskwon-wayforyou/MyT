@@ -4,6 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myt.domain.history.HistoryFilterState
 import com.myt.domain.history.HistoryPeriodFilter
+import com.myt.domain.history.HistoryTab
+import com.myt.domain.ledger.ChargeLedgerClassifier
+import com.myt.domain.ledger.ChargeLedgerSummary
 import com.myt.domain.usecase.HistoryUseCase
 import com.myt.phase3.BatteryAnalyticsUseCase
 import com.myt.phase3.BatteryHealthReport
@@ -53,6 +56,11 @@ class AnalyticsViewModel(
     private val _cameraFrames = MutableStateFlow<List<DemoCameraFrame>>(emptyList())
     val cameraFrames: StateFlow<List<DemoCameraFrame>> = _cameraFrames.asStateFlow()
 
+    private val _chargeLedger = MutableStateFlow(
+        ChargeLedgerSummary("이번 달", 0f, 0f, emptyMap()),
+    )
+    val chargeLedger: StateFlow<ChargeLedgerSummary> = _chargeLedger.asStateFlow()
+
     init {
         refresh()
     }
@@ -61,9 +69,13 @@ class AnalyticsViewModel(
         viewModelScope.launch {
             val filter = HistoryFilterState(period = HistoryPeriodFilter.All)
             val trips = historyUseCase.trips(filter)
+            val charges = historyUseCase.chargeSessions(
+                HistoryFilterState(tab = HistoryTab.Charging, period = HistoryPeriodFilter.Days30),
+            )
             _batteryReport.value = batteryAnalytics.report(filter)
             _carbonBadge.value = carbonBadge.state(filter)
             _co2Summary.value = Co2Calculator.summarizeTrips(trips)
+            _chargeLedger.value = ChargeLedgerClassifier.summarize(charges, "최근 30일")
         }
     }
 

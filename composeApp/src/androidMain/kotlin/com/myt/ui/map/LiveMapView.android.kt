@@ -110,7 +110,9 @@ private fun rebuildMarkers(
         Marker(mapView).apply {
             position = GeoPoint(latitude, longitude)
             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+            setFlat(true)
             icon = MapMarkerIcons.vehicleIcon(mapView.context, headingDegrees)
+            // Icon points north (up); rotation is clockwise degrees from north.
             rotation = headingDegrees ?: 0f
             title = "차량"
         },

@@ -22,6 +22,7 @@ fun ConnectionErrorBanner(
     kind: ConnectionErrorKind,
     onRetry: () -> Unit,
     onDismissHome: (() -> Unit)? = null,
+    detail: String? = null,
     modifier: Modifier = Modifier,
 ) {
     if (kind == ConnectionErrorKind.None) return
@@ -44,7 +45,8 @@ fun ConnectionErrorBanner(
         )
         ConnectionErrorKind.QuotaHold -> Triple(
             "테슬라API 한도 보호",
-            "무료 한도 보호를 위해 폴링 간격이 늘어났습니다.",
+            detail?.takeIf { it.isNotBlank() }
+                ?: "앱 일일/월간 호출 상한으로 갱신이 잠시 제한됩니다. 더보기 → API 사용량에서 확인하세요.",
             colors.socYellow,
         )
         ConnectionErrorKind.None -> return

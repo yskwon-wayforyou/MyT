@@ -63,6 +63,21 @@ class FleetQuotaUseCaseTest {
     }
 
     @Test
+    fun softAllowsDataAfterDailyCapOncePerInterval() = runBlocking {
+        val repo = InMemoryUsage()
+        val quota = FleetQuotaUseCase(repo, NoOpHistory(), DebugLogger(TestSettings()))
+        quota.hydrate()
+        repeat(FleetQuotaPolicy.DAILY_DATA) {
+            quota.record(FleetCallCategory.Data, true)
+        }
+        val first = quota.evaluate(FleetCallCategory.Data)
+        assertTrue(first.allowed, "first soft allow should pass")
+        val second = quota.evaluate(FleetCallCategory.Data)
+        assertFalse(second.allowed, "second within soft interval should deny")
+        assertTrue(second.reason.orEmpty().contains("오늘 Data"))
+    }
+
+    @Test
     fun allowsDataUnderDailyCap() = runBlocking {
         val repo = InMemoryUsage()
         val quota = FleetQuotaUseCase(repo, NoOpHistory(), DebugLogger(TestSettings()))
