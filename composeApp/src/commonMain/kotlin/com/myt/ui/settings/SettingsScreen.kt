@@ -50,6 +50,7 @@ import com.myt.domain.model.GaugeLayoutMode
 import com.myt.domain.model.PressureUnit
 import com.myt.domain.model.labelKo
 import com.myt.domain.usecase.AuthUseCase
+import com.myt.domain.usecase.VoiceCommandUseCase
 import com.myt.platform.BatteryOptimizationPlatform
 import com.myt.ui.theme.GaugeTheme
 import com.myt.ui.theme.TeslaCard
@@ -76,9 +77,11 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
 ) {
     val authUseCase = koinInject<AuthUseCase>()
+    val voiceCommandUseCase = koinInject<VoiceCommandUseCase>()
     val batteryOptimization = koinInject<BatteryOptimizationPlatform>()
     val scope = rememberCoroutineScope()
     var authTestMsg by remember { mutableStateOf<String?>(null) }
+    var voiceTestMsg by remember { mutableStateOf<String?>(null) }
     var appId by remember { mutableStateOf(teslaConfig.appId) }
     var clientId by remember { mutableStateOf(teslaConfig.clientId) }
     var clientSecret by remember { mutableStateOf(teslaConfig.clientSecret) }
@@ -372,6 +375,61 @@ fun SettingsScreen(
                         }
                         authTestMsg?.let {
                             Text(it, color = colors.textSecondary, fontSize = 12.sp)
+                        }
+                    }
+                }
+                SectionTitle("음성 예시 TTS 테스트")
+                Text(
+                    "예시 문구를 TTS로 재생한 뒤, 같은 텍스트를 STT 대신 주입해 명령 연동을 확인합니다. (마이크 미사용)",
+                    color = colors.textSecondary,
+                    fontSize = 12.sp,
+                )
+                TeslaCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    voiceTestMsg = "실행 중…"
+                                    val results = voiceCommandUseCase.runAllExamplesAsTtsInject(speakFirst = true)
+                                    voiceTestMsg = results.joinToString("\n") { (ex, r) ->
+                                        val ok = when (r) {
+                                            is com.myt.domain.usecase.VoiceCommandResult.Failed -> "FAIL ${r.message}"
+                                            else -> "OK ${r::class.simpleName}"
+                                        }
+                                        "${ex.id}: $ok"
+                                    }
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colors.surfaceHigh,
+                                contentColor = colors.textPrimary,
+                            ),
+                        ) {
+                            Text("TTS→명령 전체 예시 실행", color = colors.accentBlue)
+                        }
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    val example = com.myt.domain.voice.VoiceCommandExamples.byId("ytm_lee_seunghwan")
+                                        ?: return@launch
+                                    voiceTestMsg = "YTM 예시 실행 중…"
+                                    val r = voiceCommandUseCase.playExampleAndExecute(example, speakFirst = true)
+                                    voiceTestMsg = when (r) {
+                                        is com.myt.domain.usecase.VoiceCommandResult.Failed ->
+                                            "YTM FAIL: ${r.message}"
+                                        else -> "YTM OK: ${r::class.simpleName} · ${example.spokenText}"
+                                    }
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colors.surfaceHigh,
+                                contentColor = colors.textPrimary,
+                            ),
+                        ) {
+                            Text("유튜브 뮤직 예시만", color = colors.accentBlue)
+                        }
+                        voiceTestMsg?.let {
+                            Text(it, color = colors.textSecondary, fontSize = 11.sp)
                         }
                     }
                 }

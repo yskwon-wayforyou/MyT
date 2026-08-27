@@ -14,6 +14,7 @@ interface FleetRepository {
         vin: String,
         commandName: String,
         whichTrunk: String? = null,
+        jsonBody: String? = null,
     ): Result<Unit>
 }
 

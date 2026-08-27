@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import com.myt.domain.control.ControlRequest
 import com.myt.domain.control.ControlResult
 import com.myt.domain.control.VehicleCommand
+import com.myt.domain.control.VehicleCommandLabels
 import com.myt.domain.control.VehicleControlGateway
 import com.myt.ui.theme.GaugeTheme
 import com.myt.ui.theme.TeslaCard
@@ -40,13 +41,13 @@ fun QuickControlsPanel(
     var message by remember { mutableStateOf<String?>(null) }
     TeslaCard(modifier = modifier.fillMaxWidth(), accent = colors.accentBlue) {
         Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("퀵 컨트롤 (M30)", color = colors.textPrimary, fontWeight = FontWeight.SemiBold)
+            Text("퀵 컨트롤 (W3)", color = colors.textPrimary, fontWeight = FontWeight.SemiBold)
             Text(
-                "시뮬/미로그인 시 데모 · 로그인 시 Fleet 실명령(서명·VK 필요 시 안내). 주행 중 Unlock/Trunk/Frunk 차단.",
+                "시뮬/미로그인 시 데모 · 로그인 시 Fleet 실명령. 주행 중 Unlock/Trunk/Frunk 차단.",
                 color = colors.textSecondary,
-                fontSize = 12.sp,
+                fontSize = 11.sp,
             )
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 VehicleCommand.entries.forEach { cmd ->
                     Button(
                         onClick = {
@@ -57,7 +58,7 @@ fun QuickControlsPanel(
                             }
                             scope.launch {
                                 when (val result = gateway.execute(ControlRequest(cmd, target))) {
-                                    is ControlResult.Accepted -> message = "${cmd.name} 수락"
+                                    is ControlResult.Accepted -> message = "${VehicleCommandLabels.ko(cmd)} 수락"
                                     is ControlResult.Rejected -> message = result.reason
                                 }
                             }
@@ -67,7 +68,7 @@ fun QuickControlsPanel(
                             contentColor = colors.textPrimary,
                         ),
                     ) {
-                        Text(cmd.name, fontSize = 12.sp)
+                        Text(VehicleCommandLabels.ko(cmd), fontSize = 11.sp)
                     }
                 }
             }

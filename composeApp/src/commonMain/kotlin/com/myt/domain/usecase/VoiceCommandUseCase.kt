@@ -3,9 +3,11 @@ package com.myt.domain.usecase
 import com.myt.debug.DebugLogger
 import com.myt.domain.repository.HistoryRepository
 import com.myt.domain.repository.SettingsRepository
-import com.myt.platform.DeviceCommunicationsPlatform
-import com.myt.platform.SpeechPlatform
-import com.myt.platform.TextToSpeechPlatform
+import com.myt.domain.voice.VoiceCommandExample
+import com.myt.domain.voice.VoiceCommandExamples
+import com.myt.platform.DeviceCommunications
+import com.myt.platform.SpeechRecognizer
+import com.myt.platform.TextToSpeech
 
 sealed interface VoiceCommandResult {
     data class Navigate(val route: String) : VoiceCommandResult
@@ -15,16 +17,16 @@ sealed interface VoiceCommandResult {
 }
 
 class VoiceCommandUseCase(
-    private val speechPlatform: SpeechPlatform,
-    private val communications: DeviceCommunicationsPlatform,
-    private val tts: TextToSpeechPlatform,
+    private val speech: SpeechRecognizer,
+    private val communications: DeviceCommunications,
+    private val tts: TextToSpeech,
     private val voiceNavUseCase: VoiceNavUseCase,
     private val settingsRepository: SettingsRepository,
     private val historyRepository: HistoryRepository,
     private val debugLogger: DebugLogger,
 ) {
     suspend fun listenAndExecute(locale: String = "ko-KR"): VoiceCommandResult {
-        val raw = speechPlatform.recognizeSpeech(locale).getOrElse {
+        val raw = speech.recognizeSpeech(locale).getOrElse {
             debugLogger.w("Voice", "STT failed: ${it.message}")
             return VoiceCommandResult.Failed(
                 com.myt.domain.voice.SpeechErrorMessages.humanize(it.message),
@@ -33,6 +35,32 @@ class VoiceCommandUseCase(
         debugLogger.i("Voice", "Recognized: $raw")
         return execute(raw)
     }
+
+    /**
+     * TTS plays [example] then runs [execute] with the same text (STT substitute).
+     * Validates end-to-end command wiring without relying on the microphone.
+     */
+    suspend fun playExampleAndExecute(
+        example: VoiceCommandExample,
+        locale: String = "ko-KR",
+        speakFirst: Boolean = true,
+    ): VoiceCommandResult {
+        if (speakFirst) {
+            tts.speakAndWait(example.spokenText, locale).onFailure {
+                debugLogger.w("Voice", "TTS example failed: ${it.message}")
+                return VoiceCommandResult.Failed("TTS 재생 실패: ${it.message}")
+            }
+        }
+        debugLogger.i("Voice", "Example inject id=${example.id} text=${example.spokenText}")
+        return execute(example.spokenText)
+    }
+
+    suspend fun runAllExamplesAsTtsInject(
+        speakFirst: Boolean = false,
+    ): List<Pair<VoiceCommandExample, VoiceCommandResult>> =
+        VoiceCommandExamples.all.map { example ->
+            example to playExampleAndExecute(example, speakFirst = speakFirst)
+        }
 
     suspend fun execute(raw: String): VoiceCommandResult {
         val text = raw.trim()
@@ -47,8 +75,21 @@ class VoiceCommandUseCase(
             lower.contains("계기") || lower.contains("게이지") || lower.contains("홈") ->
                 VoiceCommandResult.Navigate("gauge")
 
-            lower.startsWith("전화") || lower.contains("전화 걸") || lower.contains("call ") -> {
-                val number = extractPhone(text) ?: return VoiceCommandResult.Failed("전화번호를 말씀해 주세요")
+            isYouTubeMusicCommand(lower) -> {
+                val query = extractMusicQuery(text)
+                if (query.isBlank()) {
+                    return VoiceCommandResult.Failed("재생할 가수·앨범·곡을 말씀해 주세요")
+                }
+                communications.openYouTubeMusicSearch(query).fold(
+                    onSuccess = { VoiceCommandResult.Sent },
+                    onFailure = { VoiceCommandResult.Failed(it.message ?: "유튜브 뮤직 열기 실패") },
+                )
+            }
+
+            lower.contains("전화") || lower.contains("call ") -> {
+                val number = extractPhone(text) ?: return VoiceCommandResult.Failed(
+                    "전화번호를 말씀해 주세요. 예) 「전화 01012345678」",
+                )
                 communications.dialPhone(number).fold(
                     onSuccess = { VoiceCommandResult.Sent },
                     onFailure = { VoiceCommandResult.Failed(it.message ?: "전화 연결 실패") },
@@ -87,7 +128,8 @@ class VoiceCommandUseCase(
                 )
             }
 
-            lower.contains("내비") || lower.contains("길 안내") || lower.contains("목적지") -> {
+            lower.contains("내비") || lower.contains("길 안내") || lower.contains("목적지") ||
+                lower.contains("안내") -> {
                 when (val nav = voiceNavUseCase.sendDestination(extractDestination(text))) {
                     is VoiceNavResult.Sent -> VoiceCommandResult.Sent
                     is VoiceNavResult.Failed -> VoiceCommandResult.Failed(nav.message)
@@ -98,13 +140,62 @@ class VoiceCommandUseCase(
             else -> {
                 when (val nav = voiceNavUseCase.sendDestination(text)) {
                     is VoiceNavResult.Sent -> VoiceCommandResult.Sent
-                    is VoiceNavResult.Failed -> VoiceCommandResult.Failed("명령을 이해하지 못했습니다. 내비·전화·문자·카카오·히스토리를 말씀해 주세요.")
+                    is VoiceNavResult.Failed -> VoiceCommandResult.Failed(
+                        "명령을 이해하지 못했습니다. 내비·전화·문자·카카오·유튜브 뮤직·히스토리를 말씀해 주세요.",
+                    )
                     is VoiceNavResult.Recognized -> VoiceCommandResult.Sent
                 }
             }
         }
         debugLogger.i("Voice", "Command result=${result::class.simpleName}")
         return result
+    }
+
+    private fun isYouTubeMusicCommand(lower: String): Boolean {
+        val musicHint = listOf(
+            "유튜브 뮤직",
+            "유튜브뮤직",
+            "youtube music",
+            "youtubemusic",
+            "yt music",
+            "음악 틀",
+            "노래 틀",
+            "음악 플레이",
+            "노래 플레이",
+            "음악 재생",
+            "노래 재생",
+        )
+        return musicHint.any { it in lower } ||
+            ((lower.contains("유튜브") || lower.contains("youtube")) &&
+                (lower.contains("음악") || lower.contains("뮤직") || lower.contains("노래") || lower.contains("플레이")))
+    }
+
+    private fun extractMusicQuery(text: String): String {
+        var cleaned = text
+        listOf(
+            "유튜브 뮤직에서",
+            "유튜브뮤직에서",
+            "유튜브 뮤직",
+            "유튜브뮤직",
+            "youtube music에서",
+            "youtube music",
+            "youtubemusic",
+            "음악을 무작위로 플레이해줘",
+            "음악을 무작위로 플레이",
+            "음악 무작위로 플레이해줘",
+            "무작위로 플레이해줘",
+            "무작위로 플레이",
+            "플레이해줘",
+            "틀어줘",
+            "재생해줘",
+            "재생",
+            "플레이",
+            "음악",
+            "노래",
+        ).forEach { token ->
+            cleaned = cleaned.replace(token, " ", ignoreCase = true)
+        }
+        return cleaned.replace(Regex("\\s+"), " ").trim()
     }
 
     private suspend fun lastReadableMessage(): String {
@@ -119,7 +210,7 @@ class VoiceCommandUseCase(
     }
 
     private fun extractDestination(text: String): String {
-        val keywords = listOf("내비", "길 안내", "목적지", "로", "까지", "에")
+        val keywords = listOf("내비", "길 안내", "목적지", "안내해줘", "안내", "로", "까지", "에")
         var cleaned = text
         keywords.forEach { key ->
             cleaned = cleaned.replace(key, " ", ignoreCase = true)
@@ -128,7 +219,9 @@ class VoiceCommandUseCase(
     }
 
     private fun extractPhone(text: String): String? {
-        val digits = Regex("""[\d+\-() ]+""").findAll(text).map { it.value }.maxByOrNull { it.count { c -> c.isDigit() } }
+        val digits = Regex("""[\d+\-() ]+""").findAll(text)
+            .map { it.value }
+            .maxByOrNull { it.count { c -> c.isDigit() } }
         return digits?.filter { it.isDigit() || it == '+' }?.takeIf { it.length >= 8 }
     }
 
@@ -136,7 +229,9 @@ class VoiceCommandUseCase(
         keywords.forEach { key ->
             val idx = text.indexOf(key, ignoreCase = true)
             if (idx >= 0) {
-                return text.substring(idx + key.length).trim(' ', ':', '에', '을', '를', '줘', '.').takeIf { it.isNotBlank() }
+                return text.substring(idx + key.length)
+                    .trim(' ', ':', '에', '을', '를', '줘', '.')
+                    .takeIf { it.isNotBlank() }
             }
         }
         return null

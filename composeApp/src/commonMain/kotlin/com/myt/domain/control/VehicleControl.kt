@@ -12,6 +12,13 @@ enum class VehicleCommand {
     Frunk,
     Flash,
     Honk,
+    SentryOn,
+    SentryOff,
+    DogMode,
+    CampMode,
+    WindowVent,
+    ChargePortOpen,
+    ChargePortClose,
 }
 
 data class ControlRequest(
@@ -37,9 +44,12 @@ class SafetyGatedVehicleControl(
             VehicleCommand.Unlock,
             VehicleCommand.Trunk,
             VehicleCommand.Frunk,
+            VehicleCommand.ChargePortOpen,
+            VehicleCommand.WindowVent,
         )
         if (isDriving() && request.command in blockedWhileDriving) {
-            return ControlResult.Rejected("주행 중에는 ${request.command} 명령을 보낼 수 없습니다")
+            val label = VehicleCommandLabels.ko(request.command)
+            return ControlResult.Rejected("주행 중에는 ${label} 명령을 보낼 수 없습니다")
         }
         return gateway.execute(request)
     }

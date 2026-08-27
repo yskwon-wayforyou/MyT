@@ -755,7 +755,7 @@ private fun GuidanceOverlay(
                 val ch = state.charging
                 StatusIconLabel(
                     icon = ClusterIcons.charging,
-                    label = "충전 중 ${state.socPercent.toInt()}%",
+                    label = com.myt.domain.charge.ChargeStateNormalizer.uiChargeLabel(state.socPercent, ch),
                     color = Color(0xFF30D158),
                     iconSize = 16.dp,
                     fontSize = 14.sp,

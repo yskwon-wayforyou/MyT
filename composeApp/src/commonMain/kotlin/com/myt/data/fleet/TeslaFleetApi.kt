@@ -77,18 +77,26 @@ class TeslaFleetApi(
      * POST `/api/1/vehicles/{vin}/command/{commandName}`.
      * Signed commands may return 403 until Virtual Key / vehicle-command proxy is ready.
      * @param whichTrunk `rear` / `front` when [commandName] is `actuate_trunk`
+     * @param jsonBody raw JSON for commands that need a body (sentry / window / climate keeper)
      */
     suspend fun sendVehicleCommand(
         accessToken: String,
         vin: String,
         commandName: String,
         whichTrunk: String? = null,
+        jsonBody: String? = null,
     ) {
         httpClient.post("$baseUrl/api/1/vehicles/$vin/command/$commandName") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
-            if (whichTrunk != null) {
-                contentType(ContentType.Application.Json)
-                setBody(ActuateTrunkBody(whichTrunk))
+            when {
+                whichTrunk != null -> {
+                    contentType(ContentType.Application.Json)
+                    setBody(ActuateTrunkBody(whichTrunk))
+                }
+                jsonBody != null -> {
+                    contentType(ContentType.Application.Json)
+                    setBody(jsonBody)
+                }
             }
         }.ensureSuccess(commandName)
     }
@@ -179,12 +187,13 @@ private data class VehicleDataResponse(
             } else {
                 null
             },
-            charging = ChargeInfo(
-                isCharging = chargeState?.chargingState.equals("Charging", ignoreCase = true),
-                chargeRateKw = chargeState?.chargerPower?.toFloat() ?: chargeState?.chargeRate?.toFloat(),
-                timeToFullMinutes = chargeState?.timeToFullCharge?.let { (it * 60).toInt() },
-                chargeLimitPercent = chargeState?.chargeLimitSoc,
+            charging = com.myt.domain.charge.ChargeStateNormalizer.toChargeInfo(
                 chargingState = chargeState?.chargingState,
+                batteryLevel = chargeState?.batteryLevel,
+                chargeLimitSoc = chargeState?.chargeLimitSoc,
+                chargerPowerKw = chargeState?.chargerPower,
+                chargeRate = chargeState?.chargeRate,
+                timeToFullHours = chargeState?.timeToFullCharge,
             ),
             connection = ConnectionStatus.FleetConnected,
             isSleeping = vehicleState?.state?.equals("asleep", ignoreCase = true) == true,

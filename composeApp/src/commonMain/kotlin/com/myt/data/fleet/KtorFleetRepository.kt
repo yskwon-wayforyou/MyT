@@ -98,11 +98,14 @@ class KtorFleetRepository(
         vin: String,
         commandName: String,
         whichTrunk: String?,
+        jsonBody: String?,
     ): Result<Unit> =
         runCatching {
             requireCall(FleetCallCategory.Command)
             val token = resolveAccessToken()
-            val first = runCatching { fleetApi.sendVehicleCommand(token, vin, commandName, whichTrunk) }
+            val first = runCatching {
+                fleetApi.sendVehicleCommand(token, vin, commandName, whichTrunk, jsonBody)
+            }
             if (first.isSuccess) {
                 quota.record(FleetCallCategory.Command, true)
                 return@runCatching
@@ -118,7 +121,9 @@ class KtorFleetRepository(
             woke.getOrThrow()
             delay(2_500)
             requireCall(FleetCallCategory.Command)
-            val second = runCatching { fleetApi.sendVehicleCommand(token, vin, commandName, whichTrunk) }
+            val second = runCatching {
+                fleetApi.sendVehicleCommand(token, vin, commandName, whichTrunk, jsonBody)
+            }
             quota.record(FleetCallCategory.Command, second.isSuccess)
             second.getOrThrow()
         }.onFailure { error ->

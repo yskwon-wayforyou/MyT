@@ -14,8 +14,13 @@ class FleetVehicleControlGateway(
     private val pushNotifier: PushNotifier,
 ) : VehicleControlGateway {
     override suspend fun execute(request: ControlRequest): ControlResult {
-        val (path, trunk) = mapCommand(request.command)
-        val result = fleetRepository.sendVehicleCommand(request.vin, path, trunk)
+        val mapped = mapCommand(request.command)
+        val result = fleetRepository.sendVehicleCommand(
+            vin = request.vin,
+            commandName = mapped.path,
+            whichTrunk = mapped.whichTrunk,
+            jsonBody = mapped.jsonBody,
+        )
         return result.fold(
             onSuccess = {
                 pushNotifier.notify("MyT 제어", "${label(request.command)} 전송됨")
@@ -29,27 +34,41 @@ class FleetVehicleControlGateway(
         )
     }
 
-    private fun mapCommand(command: VehicleCommand): Pair<String, String?> = when (command) {
-        VehicleCommand.Lock -> "door_lock" to null
-        VehicleCommand.Unlock -> "door_unlock" to null
-        VehicleCommand.ClimateOn -> "auto_conditioning_start" to null
-        VehicleCommand.ClimateOff -> "auto_conditioning_stop" to null
-        VehicleCommand.Trunk -> "actuate_trunk" to "rear"
-        VehicleCommand.Frunk -> "actuate_trunk" to "front"
-        VehicleCommand.Flash -> "flash_lights" to null
-        VehicleCommand.Honk -> "honk_horn" to null
+    private data class MappedCommand(
+        val path: String,
+        val whichTrunk: String? = null,
+        val jsonBody: String? = null,
+    )
+
+    private fun mapCommand(command: VehicleCommand): MappedCommand = when (command) {
+        VehicleCommand.Lock -> MappedCommand("door_lock")
+        VehicleCommand.Unlock -> MappedCommand("door_unlock")
+        VehicleCommand.ClimateOn -> MappedCommand("auto_conditioning_start")
+        VehicleCommand.ClimateOff -> MappedCommand("auto_conditioning_stop")
+        VehicleCommand.Trunk -> MappedCommand("actuate_trunk", whichTrunk = "rear")
+        VehicleCommand.Frunk -> MappedCommand("actuate_trunk", whichTrunk = "front")
+        VehicleCommand.Flash -> MappedCommand("flash_lights")
+        VehicleCommand.Honk -> MappedCommand("honk_horn")
+        VehicleCommand.SentryOn -> MappedCommand("set_sentry_mode", jsonBody = """{"on":true}""")
+        VehicleCommand.SentryOff -> MappedCommand("set_sentry_mode", jsonBody = """{"on":false}""")
+        // climate_keeper_mode: 0 Off · 1 Keep · 2 Dog · 3 Camp
+        VehicleCommand.DogMode -> MappedCommand(
+            "set_climate_keeper_mode",
+            jsonBody = """{"climate_keeper_mode":2}""",
+        )
+        VehicleCommand.CampMode -> MappedCommand(
+            "set_climate_keeper_mode",
+            jsonBody = """{"climate_keeper_mode":3}""",
+        )
+        VehicleCommand.WindowVent -> MappedCommand(
+            "window_control",
+            jsonBody = """{"command":"vent","lat":0,"lon":0}""",
+        )
+        VehicleCommand.ChargePortOpen -> MappedCommand("charge_port_door_open")
+        VehicleCommand.ChargePortClose -> MappedCommand("charge_port_door_close")
     }
 
-    private fun label(command: VehicleCommand): String = when (command) {
-        VehicleCommand.Lock -> "잠금"
-        VehicleCommand.Unlock -> "잠금 해제"
-        VehicleCommand.ClimateOn -> "공조 ON"
-        VehicleCommand.ClimateOff -> "공조 OFF"
-        VehicleCommand.Trunk -> "트렁크"
-        VehicleCommand.Frunk -> "프렁크"
-        VehicleCommand.Flash -> "라이트"
-        VehicleCommand.Honk -> "경적"
-    }
+    private fun label(command: VehicleCommand): String = VehicleCommandLabels.ko(command)
 
     private fun humanize(error: Throwable): String {
         val msg = error.message.orEmpty()

@@ -57,11 +57,13 @@ gantt
 
 ### W3 — 제어 패리티 · 자동화 · FCM · 공조 세밀 예약
 
-- [ ] Dog/Camp/Sentry/창문/충전포트 등
+- [x] Dog/Camp/Sentry/창문/충전포트 등 (퀵 컨트롤 Fleet 매핑 · 서명/VK는 후속)
 - [ ] 자동화 CRUD + 스케줄·지오펜스(1차)
 - [x] **FR-V06a 공조 세밀 예약** 기반 (모델·저장·30s 스케줄러·More 허브 UI · set_temps/열선 Fleet 세부는 후속)
 - [ ] FCM + 채널 + 절전 가이드
 - [ ] 다중 VIN 전환 UX
+- [x] 충전 상태 정규화 (Complete/한도도달 · 충전 중 캐시 skip 방지 · near-limit 45s 폴링)
+- [x] 음성 TTS 예시 주입 테스트 · YouTube Music 검색 명령
 
 ### W3b — 음성 호출
 

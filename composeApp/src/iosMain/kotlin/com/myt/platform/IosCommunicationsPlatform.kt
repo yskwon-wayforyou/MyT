@@ -12,11 +12,17 @@ actual class DeviceCommunicationsPlatform actual constructor(context: Any) {
 
     actual fun openMessagingApp(): Result<Unit> =
         Result.failure(UnsupportedOperationException("iOS messaging stub"))
+
+    actual fun openYouTubeMusicSearch(query: String): Result<Unit> =
+        Result.failure(UnsupportedOperationException("iOS YouTube Music stub"))
 }
 
 actual class TextToSpeechPlatform actual constructor(context: Any) {
     actual suspend fun speak(text: String, locale: String): Result<Unit> =
         Result.failure(UnsupportedOperationException("iOS TTS stub"))
+
+    actual suspend fun speakAndWait(text: String, locale: String): Result<Unit> =
+        speak(text, locale)
 
     actual fun stop() = Unit
 }

@@ -155,12 +155,18 @@ class TelemetryUseCase(
                     val incomplete = cached.latitude == null ||
                         cached.longitude == null ||
                         cached.tires == null
-                    if (ageMs in 0 until interval && !incomplete) {
+                    // Charging sessions end quickly near limit — never skip Fleet while
+                    // last snapshot said charging (avoids stale "94% 충전중" after Complete).
+                    val chargingStaleRisk = cached.charging?.isCharging == true
+                    if (ageMs in 0 until interval && !incomplete && !chargingStaleRisk) {
                         debugLogger.d("Telemetry", "Cache hit — skip Fleet API (age=${ageMs}ms < ${interval}ms)")
                         fleetBase = retainLocation(cached.copy(bluetoothPresent = btConnected))
                         republish(btConnected)
                         delay(interval - ageMs)
                         continue
+                    }
+                    if (chargingStaleRisk) {
+                        debugLogger.d("Telemetry", "Cache was charging — force Fleet refresh")
                     }
                     if (incomplete) {
                         debugLogger.d(
@@ -396,17 +402,23 @@ class TelemetryUseCase(
             com.myt.domain.control.VehicleCommand.Unlock -> current.copy(locked = false)
             com.myt.domain.control.VehicleCommand.ClimateOn -> current.copy(climateOn = true)
             com.myt.domain.control.VehicleCommand.ClimateOff -> current.copy(climateOn = false)
+            com.myt.domain.control.VehicleCommand.SentryOn -> current.copy(sentryMode = true)
+            com.myt.domain.control.VehicleCommand.SentryOff -> current.copy(sentryMode = false)
             com.myt.domain.control.VehicleCommand.Trunk,
             com.myt.domain.control.VehicleCommand.Frunk,
             com.myt.domain.control.VehicleCommand.Flash,
             com.myt.domain.control.VehicleCommand.Honk,
+            com.myt.domain.control.VehicleCommand.DogMode,
+            com.myt.domain.control.VehicleCommand.CampMode,
+            com.myt.domain.control.VehicleCommand.WindowVent,
+            com.myt.domain.control.VehicleCommand.ChargePortOpen,
+            com.myt.domain.control.VehicleCommand.ChargePortClose,
             -> current
         }
-        // Keep fleetBase aligned so the next poll merge does not immediately overwrite demo toggles
-        // while simulating or between polls.
         fleetBase = fleetBase.copy(
             locked = _gaugeState.value.locked ?: fleetBase.locked,
             climateOn = _gaugeState.value.climateOn ?: fleetBase.climateOn,
+            sentryMode = _gaugeState.value.sentryMode ?: fleetBase.sentryMode,
         )
     }
 
@@ -414,7 +426,15 @@ class TelemetryUseCase(
         state.connection == ConnectionStatus.QuotaHold -> 15 * 60_000L
         state.connection == ConnectionStatus.Error -> 60_000L
         state.isSleeping -> config.pollingIntervalSleepMs
-        state.charging?.isCharging == true -> config.pollingIntervalChargingMs
+        state.charging?.isCharging == true -> {
+            val limit = state.charging.chargeLimitPercent
+            val soc = state.socPercent
+            if (limit != null && soc >= (limit - 6)) {
+                config.pollingIntervalChargingNearLimitMs
+            } else {
+                config.pollingIntervalChargingMs
+            }
+        }
         state.gear == Gear.PARK -> config.pollingIntervalParkedMs
         btConnected && preferDeviceSpeed && lastDeviceFix != null -> config.pollingIntervalDrivingMs
         else -> config.pollingIntervalDrivingNoDeviceMs

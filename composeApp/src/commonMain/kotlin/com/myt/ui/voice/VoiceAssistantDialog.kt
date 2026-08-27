@@ -41,14 +41,7 @@ import com.myt.ui.theme.GaugeTheme
 import kotlin.math.PI
 import kotlin.math.sin
 
-private val voiceCapabilities = listOf(
-    "전화 걸기",
-    "문자 보내기",
-    "카카오톡",
-    "내비 목적지",
-    "히스토리",
-    "읽어줘",
-)
+private val voiceCapabilities = com.myt.domain.voice.VoiceCommandExamples.capabilityLabels
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -98,7 +91,7 @@ fun VoiceAssistantDialog(
                         }
                     }
                     Text(
-                        "예) 「강남역으로 안내」 · 「엄마에게 전화」 · 「최근 주행 읽어줘」",
+                        com.myt.domain.voice.VoiceCommandExamples.listeningHint,
                         color = colors.textSecondary.copy(alpha = 0.85f),
                         fontSize = 11.sp,
                     )

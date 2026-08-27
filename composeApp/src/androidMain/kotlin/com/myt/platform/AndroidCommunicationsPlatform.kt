@@ -47,4 +47,19 @@ actual class DeviceCommunicationsPlatform actual constructor(context: Any) {
         }
         ContextCompat.startActivity(ctx, intent, null)
     }
+
+    actual fun openYouTubeMusicSearch(query: String): Result<Unit> = runCatching {
+        val q = query.trim().ifBlank { "music" }
+        val uri = Uri.parse("https://music.youtube.com/search?q=${Uri.encode(q)}")
+        val ytm = Intent(Intent.ACTION_VIEW, uri).apply {
+            setPackage("com.google.android.apps.youtube.music")
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        if (ytm.resolveActivity(ctx.packageManager) != null) {
+            ContextCompat.startActivity(ctx, ytm, null)
+        } else {
+            val browser = Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ContextCompat.startActivity(ctx, browser, null)
+        }
+    }
 }

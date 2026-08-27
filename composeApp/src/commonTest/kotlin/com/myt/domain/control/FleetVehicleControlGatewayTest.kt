@@ -17,6 +17,7 @@ class FleetVehicleControlGatewayTest {
                 vin: String,
                 commandName: String,
                 whichTrunk: String?,
+                jsonBody: String?,
             ): Result<Unit> {
                 seen = commandName
                 return Result.success(Unit)
@@ -35,12 +36,36 @@ class FleetVehicleControlGatewayTest {
                 vin: String,
                 commandName: String,
                 whichTrunk: String?,
+                jsonBody: String?,
             ): Result<Unit> = Result.failure(IllegalStateException("Fleet door_lock failed: HTTP 403 unsigned"))
         }
         val gateway = FleetVehicleControlGateway(fleet, NoopPush)
         val result = gateway.execute(ControlRequest(VehicleCommand.Honk, "VIN"))
         assertTrue(result is ControlResult.Rejected)
         assertTrue((result as ControlResult.Rejected).reason.contains("Virtual Key"))
+    }
+
+    @Test
+    fun fleetGateway_mapsSentryOnWithBody() = runBlocking {
+        var seenName = ""
+        var seenBody: String? = null
+        val fleet = object : FleetRepository by EmptyFleetRepository {
+            override suspend fun sendVehicleCommand(
+                vin: String,
+                commandName: String,
+                whichTrunk: String?,
+                jsonBody: String?,
+            ): Result<Unit> {
+                seenName = commandName
+                seenBody = jsonBody
+                return Result.success(Unit)
+            }
+        }
+        val gateway = FleetVehicleControlGateway(fleet, NoopPush)
+        val result = gateway.execute(ControlRequest(VehicleCommand.SentryOn, "VIN"))
+        assertEquals(ControlResult.Accepted, result)
+        assertEquals("set_sentry_mode", seenName)
+        assertEquals("""{"on":true}""", seenBody)
     }
 }
 
@@ -55,6 +80,10 @@ private object EmptyFleetRepository : FleetRepository {
     override suspend fun sendNavigationRequest(vin: String, destination: String) =
         throw UnsupportedOperationException()
     override suspend fun wakeVehicle(vin: String) = throw UnsupportedOperationException()
-    override suspend fun sendVehicleCommand(vin: String, commandName: String, whichTrunk: String?) =
-        throw UnsupportedOperationException()
+    override suspend fun sendVehicleCommand(
+        vin: String,
+        commandName: String,
+        whichTrunk: String?,
+        jsonBody: String?,
+    ) = throw UnsupportedOperationException()
 }

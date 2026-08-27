@@ -69,6 +69,12 @@ import com.myt.domain.control.SelectingVehicleControlGateway
 import com.myt.domain.control.VehicleControlGateway
 import com.myt.domain.usecase.TelemetryUseCase
 import com.myt.domain.usecase.VoiceCommandUseCase
+import com.myt.platform.DeviceCommunications
+import com.myt.platform.PlatformDeviceCommunications
+import com.myt.platform.PlatformTextToSpeech
+import com.myt.platform.SpeechPlatformRecognizer
+import com.myt.platform.SpeechRecognizer
+import com.myt.platform.TextToSpeech
 import com.myt.domain.usecase.VoiceNavUseCase
 import com.myt.phase15.HybridTelemetryStreamClient
 import com.myt.phase15.TelemetryStreamClient
@@ -153,6 +159,9 @@ val domainModule = module {
     single { PresenceUseCase(get()) }
     single { SpeedCamUseCase(get(), get(), get()) }
     single { VoiceNavUseCase(get(), get(), get()) }
+    single<SpeechRecognizer> { SpeechPlatformRecognizer(get()) }
+    single<TextToSpeech> { PlatformTextToSpeech(get()) }
+    single<DeviceCommunications> { PlatformDeviceCommunications(get()) }
     single { VoiceCommandUseCase(get(), get(), get(), get(), get(), get(), get()) }
     single { HistoryUseCase(get()) }
     single { AdaptiveLayoutUseCase() }

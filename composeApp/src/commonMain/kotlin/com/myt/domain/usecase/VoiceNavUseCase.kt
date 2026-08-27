@@ -2,7 +2,7 @@ package com.myt.domain.usecase
 
 import com.myt.domain.repository.FleetRepository
 import com.myt.domain.repository.SettingsRepository
-import com.myt.platform.SpeechPlatform
+import com.myt.platform.SpeechRecognizer
 
 sealed interface VoiceNavResult {
     data class Recognized(val destination: String) : VoiceNavResult
@@ -13,10 +13,10 @@ sealed interface VoiceNavResult {
 class VoiceNavUseCase(
     private val fleetRepository: FleetRepository,
     private val settingsRepository: SettingsRepository,
-    private val speechPlatform: SpeechPlatform,
+    private val speech: SpeechRecognizer,
 ) {
     suspend fun recognizeDestination(locale: String = "ko-KR"): VoiceNavResult {
-        return speechPlatform.recognizeSpeech(locale).fold(
+        return speech.recognizeSpeech(locale).fold(
             onSuccess = { VoiceNavResult.Recognized(it) },
             onFailure = {
                 VoiceNavResult.Failed(com.myt.domain.voice.SpeechErrorMessages.humanize(it.message))
