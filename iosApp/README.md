@@ -1,25 +1,40 @@
-# MyT iOS App (Phase 1)
+# MyT iOS App (Phase 1 / 1.5)
 
-Compose Multiplatform iOS wrapper. Generate/update with:
+## Prerequisites
+
+1. JDK 17+ (`gradle.properties` already points to `~/.jdks/jdk-17.0.20+8`)
+2. Xcode 16+ **and accept license**: `sudo xcodebuild -license`
+3. Apple Development Team ID (Signing & Capabilities)
+
+## Open project
 
 ```bash
-# From project root (JDK required)
-./gradlew :composeApp:embedAndSignAppleFrameworkForXcode
+open iosApp/iosApp.xcodeproj
 ```
 
-Then open `iosApp/iosApp.xcodeproj` in Xcode 16+.
+Sources:
 
-## Setup (first time)
+- `iosApp/iOSApp.swift` — `@main` entry
+- `iosApp/ContentView.swift` — ComposeUIViewController host
+- `iosApp/SpeechHelper.swift` — native SFSpeechRecognizer
+- `iosApp/Info.plist` — BT / Mic / Location / background BT
 
-1. Install JDK 17+ and Xcode 16+
-2. Run Gradle framework embed (above)
-3. Open Xcode project
-4. Set Team + Bundle ID (`com.myt`)
-5. Enable capabilities: Bluetooth LE, Background Modes (bluetooth-central), Microphone
+## Build Compose framework
 
-## Phase 1 targets
+```bash
+./scripts/build-ios-framework.sh
+# or from Xcode: the “Compile Kotlin Framework” build phase runs
+# ./gradlew :composeApp:embedAndSignAppleFrameworkForXcode
+```
 
-- iOS 16.0+
-- iPhone + iPad (Universal)
+## Known limitation
 
-See [install-guide.md](../docs/08-implementation/install-guide.md)
+JetBrains Navigation Compose 2.9.2 ships KLIB ABI for Kotlin 2.2+, while this repo stays on Kotlin 2.1 for Android stability.  
+Until Kotlin is upgraded carefully, **iOS KLIB compile may fail** with ABI mismatch. Android builds are unaffected.
+
+## Capabilities checklist
+
+- [ ] Bluetooth LE
+- [ ] Background Modes → bluetooth-central
+- [ ] Microphone
+- [ ] Speech Recognition

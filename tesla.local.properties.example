@@ -6,7 +6,9 @@ tesla.app.id=c0ece73a-3df9-46ba-b994-373dd6cf4515
 # OAuth (Third-party token)
 tesla.client.id=
 tesla.client.secret=
-tesla.oauth.redirect.uri=myt://auth/callback
+# Must exactly match Tesla Developer Portal → Allowed Redirect URI(s).
+# HTTPS bridge page deep-links back to myt://auth/callback
+tesla.oauth.redirect.uri=https://yskwon-wayforyou.github.io/myt/oauth/callback
 
 # Partner registration domain (must match public key hosting)
 tesla.partner.domain=
@@ -20,3 +22,8 @@ tesla.private.key.path=secrets/tesla/private-key.pem
 
 # Phase 1: your Model 3 VIN (after first OAuth vehicle list)
 tesla.vehicle.vin=
+
+# Optional: in-app GitHub Issues on crash (leave token empty to use agent + gh)
+github.issues.enabled=true
+github.issues.repo=yskwon-wayforyou/MyT
+github.issues.token=

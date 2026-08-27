@@ -24,12 +24,20 @@ kotlin {
     iosArm64()
     iosSimulatorArm64()
 
+    targets.withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>().configureEach {
+        binaries.framework {
+            baseName = "ComposeApp"
+            isStatic = true
+        }
+    }
+
     sourceSets {
         val commonMain by getting {
             dependencies {
                 implementation(compose.runtime)
                 implementation(compose.foundation)
                 implementation(compose.material3)
+                implementation(compose.materialIconsExtended)
                 implementation(compose.ui)
                 implementation(compose.components.resources)
                 implementation(compose.components.uiToolingPreview)
@@ -44,7 +52,10 @@ kotlin {
 
                 implementation(libs.ktor.client.core)
                 implementation(libs.ktor.client.content.negotiation)
+                implementation(libs.ktor.client.websockets)
                 implementation(libs.ktor.serialization.kotlinx.json)
+
+                implementation(libs.kable.core)
 
                 implementation(libs.sqldelight.runtime)
                 implementation(libs.sqldelight.coroutines)
@@ -62,6 +73,15 @@ kotlin {
             dependencies {
                 implementation(kotlin("test"))
                 implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.ktor.client.mock)
+            }
+        }
+
+        val androidInstrumentedTest by getting {
+            dependencies {
+                implementation(libs.androidx.compose.ui.test.junit4)
+                implementation(libs.androidx.test.junit)
+                implementation(libs.androidx.test.runner)
             }
         }
 
@@ -75,6 +95,7 @@ kotlin {
                 implementation(libs.ktor.client.android)
                 implementation(libs.sqldelight.android)
                 implementation(libs.multiplatform.settings.no.arg)
+                implementation(libs.osmdroid.android)
             }
         }
 
@@ -94,17 +115,38 @@ kotlin {
     }
 }
 
+val teslaLocalProperties = rootProject.file("tesla.local.properties")
+val teslaAssetsDir = layout.buildDirectory.dir("generated/teslaAssets")
+
+val copyTeslaLocalProperties by tasks.registering(Copy::class) {
+    from(teslaLocalProperties)
+    into(teslaAssetsDir)
+    onlyIf { teslaLocalProperties.exists() }
+}
+
 android {
     namespace = "com.myt"
     compileSdk = 35
 
     defaultConfig {
         minSdk = 26
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    sourceSets.getByName("main").assets.srcDir(teslaAssetsDir)
+}
+
+tasks.configureEach {
+    if (name.startsWith("merge") && name.contains("Assets")) {
+        dependsOn(copyTeslaLocalProperties)
+    }
+    if (name == "preBuild") {
+        dependsOn(copyTeslaLocalProperties)
     }
 }
 

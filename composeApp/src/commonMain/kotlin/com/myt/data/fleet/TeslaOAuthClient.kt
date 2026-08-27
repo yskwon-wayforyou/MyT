@@ -15,17 +15,23 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 
 class TeslaOAuthClient(
     private val httpClient: HttpClient,
-    private val config: TeslaConfig,
+    private val configProvider: () -> TeslaConfig,
 ) {
+    private val config: TeslaConfig get() = configProvider()
     private var pendingCodeVerifier: String? = null
 
     @OptIn(ExperimentalEncodingApi::class)
     fun buildAuthorizationUrl(state: String): String {
+        require(config.redirectUri.isNotBlank()) {
+            "OAuth redirectUri missing — set tesla.oauth.redirect.uri"
+        }
         val verifier = generateCodeVerifier()
         pendingCodeVerifier = verifier
         val challenge = codeChallenge(verifier)
         val params = buildList {
             add("client_id" to encode(config.clientId))
+            // Tesla Fleet OAuth requires an allow-listed redirect_uri (typically https://…).
+            // Custom schemes like myt:// often surface as "redirect_url was not provided".
             add("redirect_uri" to encode(config.redirectUri))
             add("response_type" to "code")
             add("scope" to encode(config.scopes))
@@ -40,6 +46,9 @@ class TeslaOAuthClient(
         val verifier = pendingCodeVerifier
             ?: error("OAuth code_verifier missing — restart login")
         pendingCodeVerifier = null
+        require(config.redirectUri.isNotBlank()) {
+            "OAuth redirectUri missing — set tesla.oauth.redirect.uri"
+        }
 
         return httpClient.post(config.tokenUrl) {
             setBody(
@@ -110,7 +119,8 @@ class TeslaOAuthClient(
                     byte == '_'.code.toByte() ||
                     byte == '.'.code.toByte() ||
                     byte == '~'.code.toByte() -> byte.toInt().toChar().toString()
-                byte == ' '.code.toByte() -> "+"
+                // Prefer %20 over + for query-string compatibility with Tesla authorize.
+                byte == ' '.code.toByte() -> "%20"
                 else -> "%${byte.toUByte().toString(16).uppercase().padStart(2, '0')}"
             }
         }

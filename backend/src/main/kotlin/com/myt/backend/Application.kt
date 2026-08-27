@@ -2,6 +2,7 @@ package com.myt.backend
 
 import com.myt.backend.routes.apiRoutes
 import com.myt.backend.routes.authRoutes
+import com.myt.backend.routes.dashboardRoutes
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -18,11 +19,12 @@ fun main() {
 
 fun Application.module() {
     install(ContentNegotiation) {
-        json(Json { ignoreUnknownKeys = true; prettyPrint = true })
+        json(Json { ignoreUnknownKeys = true; prettyPrint = true; encodeDefaults = true })
     }
     routing {
         get("/health") { call.respond(mapOf("status" to "ok", "service" to "myt-backend")) }
         authRoutes()
         apiRoutes()
+        dashboardRoutes()
     }
 }

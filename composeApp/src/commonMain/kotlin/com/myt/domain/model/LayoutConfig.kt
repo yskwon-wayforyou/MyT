@@ -2,6 +2,7 @@ package com.myt.domain.model
 
 enum class LayoutConfig {
     SinglePane,
+    Landscape,
     TwoPane,
     ThreePane,
 }

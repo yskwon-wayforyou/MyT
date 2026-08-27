@@ -80,11 +80,13 @@ flowchart LR
 
 | 상태 | 간격 | API Endpoint |
 |---|---|---|
-| 주행 중 (Gear ≠ P) | 2초 | vehicle_data |
-| 주차 (Gear = P) | 30초 | vehicle_data |
-| 충전 중 | 5초 | vehicle_data |
-| Sleep | 60초 (웨이크 시도) | vehicle_data |
-| BT 미연결 | 폴링 중지 | - |
+| 주행 중 (Gear ≠ P), 포그라운드 | 60초 | vehicle_data |
+| 주차 (Gear = P), 포그라운드 | 5분 | vehicle_data |
+| 충전 중 | 3분 | vehicle_data |
+| Sleep | 호출 없음 | 사용자 새로고침 시에만 wake |
+| 백그라운드 | 폴링 중지 | - |
+| 크레딧 70% 이상 | 위 간격 × 2 | - |
+| 크레딧 95% 이상 | 호출 차단 | - |
 
 ## 3. SpeedCamEngine 설계
 
@@ -141,21 +143,25 @@ class AdaptiveLayoutUseCase {
         widthClass: WindowWidthSizeClass,
         heightClass: WindowHeightSizeClass,
     ): LayoutConfig = when {
-        widthClass == Compact -> LayoutConfig.SinglePane
-        widthClass == Medium  -> LayoutConfig.TwoPane(showMap = true)
-        widthClass == Expanded -> LayoutConfig.ThreePane
+        heightClass == WindowHeightSizeClass.Compact -> LayoutConfig.Landscape
+        widthClass == WindowWidthSizeClass.Compact -> LayoutConfig.SinglePane
+        widthClass == WindowWidthSizeClass.Medium -> LayoutConfig.TwoPane
+        widthClass == WindowWidthSizeClass.Expanded -> LayoutConfig.ThreePane
         else -> LayoutConfig.SinglePane
     }
 }
 ```
 
+회전은 Compose `BoxWithConstraints`로 매 프레임 크기를 읽어 즉시 재배치한다. ViewModel 폴링 틱을 기다리지 않는다.
+
 ### LayoutConfig → Composable 매핑
 
 | LayoutConfig | Composable | 패널 |
 |---|---|---|
-| SinglePane | `GaugeSinglePaneLayout` | Speed + InfoStack |
-| TwoPane | `GaugeTwoPaneLayout` | Speed \| Info+Map |
-| ThreePane | `GaugeThreePaneLayout` | Speed \| Map \| Detail |
+| SinglePane | `GaugeSinglePaneLayout` | 세로: Speed + 상태 그리드 |
+| Landscape | `GaugeLandscapeLayout` | 가로 Compact 높이: 축소 Speed \| 스크롤 상태 |
+| TwoPane | `GaugeTwoPaneLayout` | Speed \| Info |
+| ThreePane | `GaugeTwoPaneLayout` | 태블릿 가로 확장 |
 
 ## 6. Platform expect/actual
 

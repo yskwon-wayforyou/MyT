@@ -11,7 +11,7 @@
 |---|---|
 | App UUID | `c0ece73a-3df9-46ba-b994-373dd6cf4515` |
 | Dashboard | [앱 상세](https://developer.tesla.com/ko_KR/dashboard/app-details/c0ece73a-3df9-46ba-b994-373dd6cf4515) |
-| OAuth Redirect (MyT) | `myt://auth/callback` |
+| OAuth Redirect (MyT) | `https://yskwon-wayforyou.github.io/myt/oauth/callback` → `myt://auth/callback` |
 | 로컬 설정 | `tesla.local.properties` (gitignored) |
 
 Client ID / Secret 은 대시보드에서 복사 후:
@@ -55,7 +55,7 @@ Client ID / Secret 은 대시보드에서 복사 후:
 |---|---|
 | Application name | `MyT-Personal` (고유해야 함, 중복 시 거절) |
 | Description | Personal Tesla Model 3 dashboard companion for private use |
-| Allowed origins / Redirect URI | `myt://auth/callback` (앱 딥링크) + 필요 시 `http://localhost:8080/callback` (개발용) |
+| Allowed origins / Redirect URI | `https://yskwon-wayforyou.github.io/myt/oauth/callback` (필수, Developer Portal Allow-list와 문자 단위 일치) |
 | Domain | 공개키를 올릴 **루트 도메인** (예: `example.com`) |
 
 4. **Scopes** — MyT Phase 1에 필요한 것만 선택:
@@ -208,7 +208,7 @@ cp tesla.local.properties.example tesla.local.properties
 ```properties
 tesla.client.id=<CLIENT_ID>
 tesla.client.secret=<CLIENT_SECRET>
-tesla.oauth.redirect.uri=myt://auth/callback
+tesla.oauth.redirect.uri=https://yskwon-wayforyou.github.io/myt/oauth/callback
 tesla.partner.domain=<YOUR_DOMAIN>
 tesla.fleet.api.base=https://fleet-api.prd.na.vn.cloud.tesla.com
 tesla.auth.url=https://fleet-auth.prd.vn.cloud.tesla.com/oauth2/v3

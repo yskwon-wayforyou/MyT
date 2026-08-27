@@ -1,0 +1,11 @@
+# Dev scaffold for MyT backend (M25). Prefer host `./gradlew :backend:run` when possible.
+services:
+  myt-backend:
+    image: eclipse-temurin:17-jre
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+    # Built JAR path after `./gradlew :backend:installDist`
+    command: ["bash", "-lc", "echo 'Build with: ./gradlew :backend:installDist && docker compose up' && sleep infinity"]
+    ports:
+      - "8080:8080"

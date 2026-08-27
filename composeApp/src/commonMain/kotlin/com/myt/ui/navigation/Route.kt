@@ -19,11 +19,27 @@ sealed interface Route {
     @Serializable
     data object VoiceNav : Route
 
-    /** Phase 1.5 — M22 */
+    /** History hub — driving, charging, Fleet API */
+    @Serializable
+    data object History : Route
+
+    /** @deprecated Use [History] */
     @Serializable
     data object TripHistory : Route
 
-    /** Phase 2 — subscription (M37) */
+    /** Debug log viewer + Gmail export */
     @Serializable
-    data object Subscription : Route
+    data object DebugLogs : Route
+
+    /** Phase 3 — analytics, carbon badge, export. */
+    @Serializable
+    data object Analytics : Route
+
+    /** Phase 2 — subscription / watch / widget demos. */
+    @Serializable
+    data object Commercial : Route
+
+    /** Phase 1.5 — full-screen trip route (M21/M22). */
+    @Serializable
+    data class TripRoute(val tripId: String) : Route
 }

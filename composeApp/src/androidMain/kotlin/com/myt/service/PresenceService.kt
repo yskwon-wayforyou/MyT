@@ -1,13 +1,15 @@
 package com.myt.service
 
-import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import androidx.core.app.ServiceCompat
+import com.myt.platform.BtConnectionHub
 
 class PresenceService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
@@ -21,11 +23,26 @@ class PresenceService : Service() {
             .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
             .setOngoing(true)
             .build()
-        startForeground(NOTIFICATION_ID, notification)
+        // Android 14+/targetSdk 35: connectedDevice FGS requires runtime BT permissions.
+        // If missing, exit cleanly instead of crashing the process during OAuth.
+        runCatching {
+            ServiceCompat.startForeground(
+                this,
+                NOTIFICATION_ID,
+                notification,
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+                } else {
+                    0
+                },
+            )
+        }.onFailure {
+            stopSelf()
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // TODO: BLE presence loop
+        BtConnectionHub.emitCurrentForService()
         return START_STICKY
     }
 

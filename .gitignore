@@ -53,6 +53,7 @@ iosApp/build/
 # Secrets
 *.keystore
 *.jks
+androidApp/keystore.properties
 .env
 .env.*
 secrets/

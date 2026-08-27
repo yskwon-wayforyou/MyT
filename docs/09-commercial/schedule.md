@@ -1,0 +1,116 @@
+# 상용화 작업 일정 (Wave 기준)
+
+기준일: **2026-08-27**  
+원본 의사결정: [decisions-and-backlog.md](./decisions-and-backlog.md)  
+가정: 1인 개발 · Android 폰 우선 · Partner 상용 등록은 W5 이후 재검토 · Billing은 W9
+
+```mermaid
+gantt
+  title MyT_Wave_Schedule
+  dateFormat YYYY-MM-DD
+  axisFormat %m/%d
+
+  section W1_Fleet_Auth
+  실_Fleet_명령_AUTH테스트   :w1, 2026-08-28, 21d
+
+  section W2_Drive_Quality
+  Gauge_SpeedCam_실차품질     :w2, 2026-09-11, 21d
+
+  section W3_Control_Notify
+  제어패리티_FCM_자동화       :w3, 2026-09-25, 28d
+
+  section W4_Analytics_Cam
+  Camera_Glance_분석깊이      :w4, 2026-10-16, 28d
+
+  section W5_Play_Free
+  Play_Free_Android폰         :w5, 2026-11-06, 28d
+
+  section W6_Tablet
+  Android_태블릿              :w6, 2026-12-04, 21d
+
+  section W7_W8_iOS
+  iOS_폰                      :w7, 2026-12-25, 42d
+  iOS_태블릿                  :w8, 2027-02-05, 28d
+
+  section W9_Monetize
+  Free_Plus_Pro_Billing       :w9, 2027-03-05, 35d
+```
+
+## Wave 체크리스트
+
+### W1 — Fleet · Auth 테스트 (즉시)
+
+- [ ] `FleetVehicleControlGateway` (Demo 교체)
+- [ ] 실차 Lock/Climate/Trunk/Flash/Honk + Safety gate
+- [ ] OAuth refresh 안정화, VK 페어링 **테스트** UX
+- [ ] 명령 서명/프록시 (필요 시), API 비용 가드 런타임
+- [ ] 음성 `navigation_request` 실경로 스모크
+
+### W2 — 운전 중 경험 품질
+
+- [ ] Gauge/SpeedCam/BT/테마 실차 QA
+- [ ] POI OTA·오탐 로그, 지도 품질
+- [ ] 운전 중 고지 UX
+- [ ] 2주 실차 무중단 게이트 착수
+
+### W3 — 제어 패리티 · 자동화 · FCM · 공조 세밀 예약
+
+- [ ] Dog/Camp/Sentry/창문/충전포트 등
+- [ ] 자동화 CRUD + 스케줄·지오펜스(1차)
+- [ ] **FR-V06a 공조 세밀 예약** (Plus 예고, Free 선포함)
+- [ ] FCM + 채널 + 절전 가이드
+- [ ] 다중 VIN 전환 UX
+
+### W3b — 음성 호출
+
+- [ ] FR-N10 웨이크워드 / 인카 청취 진입
+- [ ] FR-N11 핸들 음성 버튼 **가능성 조사** + 대체 UX
+
+### W4 — 분석 · Camera · 위젯 · 차계부
+
+- [ ] Live Camera 실스트림 (Free 포함)
+- [ ] Glance 홈 위젯
+- [ ] 배터리·FSD 실데이터
+- [ ] **FR-CH10/11 충전 차계부** (SC/일반 구분·합산)
+- [ ] HA/Web 품질, Watch UI **제거**
+
+### W4b — 스마트 목적지
+
+- [ ] FR-N08/N09 자연어·이력 기반 목적지 검색·설정
+
+### W5 — Play Free (Android 폰)
+
+- [ ] Privacy / Data safety / ToS
+- [ ] 리스팅·내부/비공개/프로덕션
+- [ ] **전 기능 Free** 패키지 (Billing 없음)
+- [ ] 안정화 기간 운영 (크래시·비용 관측)
+
+### W6 — Android 태블릿
+
+- [ ] 적응형 레이아웃·스토어 태블릿 자산
+
+### W7–W8 — iOS
+
+- [ ] iOS 폰 빌드·패리티 → App Store 준비
+- [ ] iOS 태블릿
+
+### W9 — 유료화
+
+- [ ] Free/Plus/Pro 기능 재정의
+- [ ] Play Billing + 서버 검증
+- [ ] (선택) App Store 유료
+
+### WP — Partner 재검토 (W5 안정화 후)
+
+- [ ] 상용 앱 등록·프로덕션 도메인 키·멀티유저
+
+## 이전 일정안과의 차이
+
+| 이전 가정 | 현재 결정 |
+|---|---|
+| Partner·Billing을 출시 전 필수 | Partner·Billing **후순위** (W9 / WP) |
+| Free+유료 게이트 동시 | **Free 전기능** 먼저 |
+| Watch/Wear Optional | **영구 제외** |
+| 데모 제어 유지 가능 | **실 Fleet 즉시 (W1)** |
+
+상세 ID별 표: [decisions-and-backlog.md](./decisions-and-backlog.md) §3

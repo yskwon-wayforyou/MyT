@@ -94,27 +94,35 @@
 **Mermaid:**
 
 ```mermaid
-block-beta
-  columns 1
-  block:status:1
-    BT Fleet Lock Time
+flowchart TB
+  subgraph status [Status]
+    BT[BT]
+    Fleet[Fleet]
+    Lock[Lock]
+    Time[Time]
   end
-  block:speed:1
-    Speed_120sp
-    Gear_Pill
+  subgraph speed [Speed]
+    SpeedVal[Speed_120sp]
+    GearPill[Gear_Pill]
   end
-  block:info:1
-    SOC Range Temp
+  subgraph info [Info]
+    SOC[SOC]
+    Range[Range]
+    Temp[Temp]
   end
-  block:nav:1
-    Dest ETA Distance
+  subgraph nav [Nav]
+    Dest[Dest]
+    ETA[ETA]
+    Distance[Distance]
   end
-  block:alert:1
-    SpeedCam_Banner
+  subgraph alert [Alert]
+    SpeedCam[SpeedCam_Banner]
   end
-  block:action:1
-    Voice Settings
+  subgraph action [Action]
+    Voice[Voice]
+    Settings[Settings]
   end
+  status --> speed --> info --> nav --> alert --> action
 ```
 
 ### 2.2 폰 가로 (Compact Landscape)
@@ -333,8 +341,9 @@ flowchart LR
 | 상태 | 표시 | 위치 |
 |---|---|---|
 | Fleet API 연결 중 | Skeleton shimmer | Speed 영역 |
-| 차량 Sleep | "😴 차량 대기 중" + 마지막 데이터 (50% opacity) | Speed 영역 |
-| BT 미연결 | "📡 블루투스 연결 대기" | 전체 중앙 |
+| 차량 Sleep | "차량 대기 중" + 마지막 데이터 | Speed 영역 |
+| BT 미연결 | 상태 배지에서 BT 숨김. Fleet 데이터는 그대로 표시 | Status Bar |
+| Fleet 원격 조회 | "FLEET" | Status Bar |
 | GPS 없음 | "---" + GPS icon grey | Nav 영역 |
 | API 오류 | "⚠ 연결 오류" + 재시도 버튼 | Status Bar |
 | 토큰 만료 | "🔑 재로그인 필요" | Full screen overlay |

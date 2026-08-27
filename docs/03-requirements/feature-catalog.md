@@ -62,6 +62,8 @@ mindmap
 | A14 | **과속단속 L1~L3** | 다단계 시각+청각+햅틱 | **1** | MyT 고유 |
 | A15 | **구간단속 추적** | 평균속도 실시간 계산 | **1** | MyT 고유 |
 | A16 | **음성 목적지** | STT → navigation_request | **1** | MyT 고유 |
+| A16a | **스마트 목적지** | 자연어 조건 + 이력 기반 검색·설정 | 2 | MyT · **Pro(W9)** |
+| A16b | **음성 호출** | 웨이크워드 / 핸들 버튼(조사) | 2 | MyT · **Plus~Pro** |
 | A17 | **주야간 테마** | Auto/Manual Dark/Light | **1** | Tessie, TezLab |
 | A18 | **OBD Profiler** | 실시간 ECU급 진단 | 2 | Tessie |
 | A19 | **적응형 레이아웃** | 폰/태블릿/가로/세로 | **1** | MyT 고유 |
@@ -95,6 +97,7 @@ mindmap
 |---|---|---|---|---|
 | C01 | 충전 세션 기록 | Start/end, kWh, duration | 1.5 | 공통 |
 | C02 | 충전 비용 | Time-of-Use rate calc | 2 | Tessie, Teslascope |
+| C02a | **충전 차계부** | SC/일반 구분·합산·월별 UI | 2 | MyT · **Plus(W9)** |
 | C03 | Geo-fencing 요금 | Location-based pricing | 2 | Teslascope |
 | C04 | Supercharger 비용 | Auto cost + invoice | 2 | Teslascope |
 | C05 | 팬텀 드레인 | Daily/weekly drain stats | 2 | Tessie, Stats |
@@ -119,6 +122,7 @@ mindmap
 | D05 | 경적/라이트 | honk_horn, flash_lights | 2 | Tessie |
 | D06 | 클라이-mate ON/OFF | auto_conditioning | 2 | 공통 |
 | D07 | 클라이-mate 온도 | set_temps | 2 | 공통 |
+| D07a | **공조 세밀 예약** | 시각·온도·열선·반복 조건 | 2 | MyT · **Plus(W9)** |
 | D08 | Dog Mode | keep_cabin_temp for pets | 2 | TezLab |
 | D09 | Camp Mode | maintain temp + screen | 2 | TezLab |
 | D10 | Sentry Mode | set_sentry_mode | 2 | Tessie |

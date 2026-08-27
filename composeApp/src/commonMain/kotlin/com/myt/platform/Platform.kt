@@ -25,10 +25,17 @@ expect class SpeechPlatform(context: Any) {
 }
 
 expect class AudioAlertPlatform(context: Any) {
+    /** True when device volume allows beeps (library / silent mode). */
+    fun isAudible(): Boolean
+    /** Simulation·테스트 중 오디오 경보 금지 */
+    fun setAlertsSuppressed(suppressed: Boolean)
+    fun areAlertsSuppressed(): Boolean
     fun playBeep(frequencyHz: Int, durationMs: Int, count: Int)
 }
 
 expect class HapticPlatform(context: Any) {
+    fun setHapticsSuppressed(suppressed: Boolean)
+    fun areHapticsSuppressed(): Boolean
     fun vibrate(durationMs: Long)
 }
 
@@ -36,4 +43,11 @@ expect class ScreenPlatform(context: Any) {
     fun keepScreenOn(enable: Boolean)
     fun currentWidthDp(): Int
     fun currentHeightDp(): Int
+}
+
+expect class DeviceLocationPlatform(context: Any) {
+    val fixes: kotlinx.coroutines.flow.Flow<com.myt.domain.device.DeviceFix?>
+    fun hasPermission(): Boolean
+    fun startUpdates()
+    fun stopUpdates()
 }

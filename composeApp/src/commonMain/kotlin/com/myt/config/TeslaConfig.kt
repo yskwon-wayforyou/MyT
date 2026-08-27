@@ -1,5 +1,11 @@
 package com.myt.config
 
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class TeslaConfig(
     val appId: String,
     val clientId: String,
@@ -10,6 +16,9 @@ data class TeslaConfig(
     val authBaseUrl: String,
     val scopes: String,
     val vehicleVin: String,
+    val poiOtaCsvUrl: String = "",
+    /** Optional Fleet Telemetry WebSocket URL (M20). Empty = REST polling only. */
+    val telemetryWssUrl: String = "",
 ) {
     val authorizeUrl: String get() = "$authBaseUrl/authorize"
     val tokenUrl: String get() = "$authBaseUrl/token"
@@ -32,7 +41,7 @@ data class TeslaConfig(
             appId = appId,
             clientId = "",
             clientSecret = "",
-            redirectUri = "myt://auth/callback",
+            redirectUri = "https://yskwon-wayforyou.github.io/myt/oauth/callback",
             partnerDomain = "",
             fleetApiBase = "https://fleet-api.prd.na.vn.cloud.tesla.com",
             authBaseUrl = "https://fleet-auth.prd.vn.cloud.tesla.com/oauth2/v3",
@@ -42,4 +51,22 @@ data class TeslaConfig(
     }
 }
 
+class TeslaConfigStore(
+    initial: TeslaConfig = loadTeslaConfig(),
+) {
+    private val _config = MutableStateFlow(initial)
+    val config: StateFlow<TeslaConfig> = _config.asStateFlow()
+
+    fun current(): TeslaConfig = _config.value
+
+    fun save(updated: TeslaConfig) {
+        persistTeslaConfig(updated)
+        _config.value = updated
+    }
+}
+
 expect fun loadTeslaConfig(): TeslaConfig
+
+expect fun persistTeslaVehicleVin(vin: String)
+
+expect fun persistTeslaConfig(config: TeslaConfig)

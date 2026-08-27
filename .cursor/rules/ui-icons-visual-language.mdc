@@ -1,0 +1,40 @@
+---
+description: MyT UI — 아이콘·이미지 적극 사용·ClusterIcons 통일 규칙
+globs: composeApp/src/**/ui/**/*.kt
+alwaysApply: false
+---
+
+# MyT UI 아이콘·비주얼 언어
+
+게이지·상태·설정 등 **사용자-facing UI**를 추가·수정할 때 아래를 따른다.
+
+## 원칙
+
+1. **텍스트만 있는 상태/액션은 지양** — 의미가 드러나는 Material 아이콘(또는 Canvas 실루엣)을 함께 둔다.
+2. **아이콘 소스는 `ClusterIcons` 우선** — 새 항목은 `composeApp/.../ui/gauge/ClusterIcons.kt`에 추가 후 재사용한다.
+3. **라벨+아이콘은 `StatusIconLabel`** — 게이지·칩·오버레이 캡션은 이 컴포넌트(또는 동일 패턴)를 쓴다.
+4. **색 = 상태** — 연결(녹/주황/회색), 경고(노랑→빨강), 충전(녹), 내비(녹), 맵(하늘) 등 기존 `GaugeTheme`·Cluster 색상과 맞춘다.
+5. **한 줄 우선** — 좁은 공간 라벨은 `maxLines = 1`, `TextOverflow.Ellipsis`; 긴 설명은 아이콘으로 줄이거나 보조 화면으로 분리한다.
+6. **접근성** — `contentDescription`은 라벨과 동일·유사하게; 장식-only는 `null` 허용.
+
+## 새 기능 체크리스트
+
+- [ ] 상태/모드/연결/경고에 아이콘 매핑 (`ClusterIcons` 또는 전용 Vector)
+- [ ] 액션 버튼(음성·기록·더보기 등)에 14–18dp 아이콘
+- [ ] 빈/대기 상태에 `info`·`schedule` 등 placeholder 아이콘 + 짧은 문구
+- [ ] 지도·타이어·충전 등 패널 헤더에 패널 종류 아이콘
+- [ ] 사용자 문구에 내부 용어 `Fleet` 금지 → **`테슬라API`** (`UiLabels`)
+
+## 코드 위치
+
+| 영역 | 파일 |
+|---|---|
+| 아이콘 정의 | `ui/gauge/ClusterIcons.kt` |
+| 라벨+아이콘 | `StatusIconLabel` (동 파일) |
+| 사용자-facing 문자열 | `ui/UiLabels.kt` |
+| 듀얼 게이지 | `ui/gauge/ClusterDriveHome.kt` |
+
+## Material Icons
+
+- `compose.materialIconsExtended` 사용 가능.
+- 새 아이콘 추가 시 의미가 겹치지 않게, 기존 `ClusterIcons`와 톤(Filled, 14–18dp)을 맞춘다.

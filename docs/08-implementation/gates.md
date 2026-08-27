@@ -17,22 +17,25 @@
 | **G8** | 1.5 | Telemetry 지연 50% 감소 | pending |
 | **G9** | 1.5 | polyline 지도 표시 | pending |
 | **G10** | 1.5 | v0.2.0 배포 | pending |
-| **G11** | 2 | Auth proxy + Telemetry live | pending |
-| **G12** | 2 | lock/climate/trunk 동작 | pending |
-| **G13** | 2 | 5+ automation rules | pending |
-| **G14** | 2 | Watch + Widget | pending |
-| **G15** | 2 | Billing sandbox | pending |
+| **G11** | 2 | Auth proxy + Telemetry live | 🔄 auth sandbox refresh |
+| **G12** | 2 | lock/climate/trunk 동작 | 🔄 scaffold (API + safety gate) |
+| **G13** | 2 | 5+ automation rules | 🔄 client+API demo |
+| **G14** | 2 | Watch + Widget | 🔄 WidgetSnapshot + WatchCompanion stub |
+| **G15** | 2 | Billing sandbox | 🔄 SandboxBillingGateway |
 | **G16** | 2 | Store 승인 + 100 유저 | pending |
-| **G17** | 3 | HA MQTT entity | pending |
-| **G18** | 3 | Web control live | pending |
-| **G19** | 3 | Battery degradation graph | pending |
-| **G20** | 3 | Import/export | pending |
+| **G17** | 3 | HA MQTT entity | 🔄 REST bridge + discovery JSON |
+| **G18** | 3 | Web control live | 🔄 `/dash` read-only stub |
+| **G19** | 3 | Battery degradation graph | 🔄 Analytics UI |
+| **G20** | 3 | Import/export | 🔄 CSV + Tessie parser |
 
 ## 통과 기록
 
 | Gate | Passed At (KST) | Verified By | Notes |
 |---|---|---|---|
 | G2-partial | 2026-08-20 11:44 | Cursor | GaugeScreen + mock GaugeState 렌더 스캐폴드 |
+| G17-partial | 2026-08-27 | Cursor | HaRestStateBridge + discovery; HA 실기 미검증 |
+| G19-partial | 2026-08-27 | Cursor | BatteryAnalyticsUseCase + AnalyticsScreen |
+| G20-partial | 2026-08-27 | Cursor | SqlDataPortability CSV + TessieCsvParser |
 
 ```mermaid
 flowchart LR

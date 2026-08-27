@@ -1,5 +1,8 @@
 # 적응형 레이아웃 설계
 
+> **상위 비전 (2026-08 리뉴얼):** [ui-renewal-commercial-roadmap.md](./ui-renewal-commercial-roadmap.md) — 3존 클러스터 · progressive disclosure.  
+> 본 문서는 Window Size Class·기존 Single/Two/ThreePane 계약을 유지하며, Drive Home 밀도·메뉴는 로드맵이 우선한다.
+
 ## 1. Window Size Class 기준
 
 ```mermaid
@@ -26,13 +29,13 @@ flowchart TD
 | 디바이스 | 방향 | Width Class | Layout | Navigation |
 |---|---|---|---|---|
 | iPhone | Portrait | Compact | SinglePane | None (Gauge only) |
-| iPhone | Landscape | Compact | TwoPane (Speed\|Info) | None |
+| iPhone | Landscape | Height Compact | Landscape | None |
 | iPad Mini | Portrait | Medium | TwoPane (Speed+Info\|Map) | Rail collapsed |
 | iPad Mini | Landscape | Expanded | ThreePane | Rail expanded |
 | iPad Pro 13 | Portrait | Medium~Expanded | TwoPane~ThreePane | Rail |
 | iPad Pro 13 | Landscape | Expanded | ThreePane | Rail expanded |
 | Android Phone | Portrait | Compact | SinglePane | None |
-| Android Phone | Landscape | Compact | TwoPane | None |
+| Android Phone | Landscape | Medium + Height Compact | Landscape | None |
 | Android Tablet | Portrait | Medium | TwoPane | Rail |
 | Android Tablet | Landscape | Expanded | ThreePane | Rail expanded |
 
@@ -44,6 +47,7 @@ flowchart TB
   AdaptiveGaugeLayout --> WindowSizeDetector
   WindowSizeDetector --> LayoutSelector
 
+  LayoutSelector -->|Height_Compact| LandscapeLayout
   LayoutSelector -->|Compact| SinglePaneLayout
   LayoutSelector -->|Medium| TwoPaneLayout
   LayoutSelector -->|Expanded| ThreePaneLayout
@@ -104,7 +108,33 @@ fun GaugeSinglePaneLayout(state: GaugeState, alert: SpeedCamAlert?) {
 }
 ```
 
-## 5. TwoPaneLayout (폰 가로 / 태블릿 세로)
+## 5.1 LandscapeLayout (폰 가로, 높이 < 480dp)
+
+속도 숫자를 축소하고 상태 타일은 오른쪽에서 세로 스크롤한다. 액션은 36dp 칩으로 고정해 본문을 가리지 않는다.
+
+```
+┌──────────────────────────────────────────────┐
+│ MyT                    FLEET · 잠금          │  28dp
+├────────────────┬─────────────────────────────┤
+│      0         │  SOC  Range  In   Out       │
+│    km/h        │  Lock Sentry AC   kW        │  scroll
+│   P R N D      │  Charge Tires Odo Nav       │
+│                │                             │
+├────────────────┴─────────────────────────────┤
+│ [음성 내비]  [설정]                           │  36dp
+└──────────────────────────────────────────────┘
+```
+
+| 요소 | 세로 | 가로 Compact |
+|---|---|---|
+| Speed | 104sp | 56sp |
+| Gear selected | 28sp | 18sp |
+| ActionBar height | 52dp | 36dp |
+| Info | 가로 3카드 | 2열 타일 + 스크롤 |
+
+회전 시 `BoxWithConstraints`가 maxWidth/maxHeight를 읽어 즉시 전환한다.
+
+## 5. TwoPaneLayout (태블릿 세로)
 
 ```
 ┌─────────────────────────────────────┐

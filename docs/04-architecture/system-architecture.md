@@ -3,43 +3,39 @@
 ## 1. C4 Level 1 — 시스템 컨텍스트
 
 ```mermaid
-C4Context
-  title MyT_System_Context
-  Person(driver, "운전자", "Tesla Model 3 운전자")
-  System(myt, "MyT App", "크로스플랫폼 Tesla 계기판 컴패니언")
-  System_Ext(tesla, "Tesla Fleet API", "차량 데이터·명령")
-  System_Ext(opendata, "공공데이터포털", "과속단속 카메라 POI")
-  System_Ext(stt, "Platform STT", "iOS SFSpeech / Android SpeechRecognizer")
+flowchart LR
+  Driver[운전자]
+  MyT[MyT App]
+  Tesla[Tesla Fleet API]
+  OpenData[공공데이터포털]
+  STT[Platform STT]
 
-  Rel(driver, myt, "Gauge 확인, 음성 내비", "BT+Touch+Voice")
-  Rel(myt, tesla, "vehicle_data, navigation_request", "HTTPS/OAuth")
-  Rel(myt, opendata, "POI DB download", "HTTPS")
-  Rel(myt, stt, "음성 인식", "Platform API")
+  Driver -->|"Touch Voice BLE"| MyT
+  MyT -->|"vehicle_data navigation_request"| Tesla
+  MyT -->|"POI download"| OpenData
+  MyT -->|"음성 인식"| STT
 ```
 
 ## 2. C4 Level 2 — 컨테이너
 
 ```mermaid
-C4Container
-  title MyT_Container_Diagram
-  Person(driver, "운전자")
+flowchart TB
+  Driver[운전자]
+  subgraph MyTBoundary [MyT]
+    App[Compose Multiplatform App]
+    LocalDB[(SQLDelight Local DB)]
+    Platform[Platform Services BT STT Audio Keystore]
+  end
+  FleetAPI[Tesla Fleet API]
+  OpenData[data.go.kr]
+  Telemetry[Fleet Telemetry Server]
 
-  Container_Boundary(myt, "MyT") {
-    Container(app, "Compose Multiplatform App", "Kotlin", "Gauge UI, SpeedCam, Voice Nav")
-    Container(localdb, "Local DB", "SQLDelight", "POI, Trip, Settings")
-    Container(platform, "Platform Services", "Native", "BT, STT, Audio, Haptic, Keystore")
-  }
-
-  Container_Ext(fleetapi, "Tesla Fleet API", "REST", "Vehicle data & commands")
-  Container_Ext(opendata, "data.go.kr", "REST/JSON", "Speed camera POI")
-  Container_Ext(telemetry, "Fleet Telemetry Server", "WebSocket", "Phase 1.5+ streaming")
-
-  Rel(driver, app, "Uses")
-  Rel(app, platform, "BT events, STT, Audio")
-  Rel(app, localdb, "Read/Write")
-  Rel(app, fleetapi, "OAuth + REST", "HTTPS")
-  Rel(app, opendata, "POI sync", "HTTPS")
-  Rel(app, telemetry, "Stream", "WSS")
+  Driver --> App
+  App --> Platform
+  App --> LocalDB
+  App -->|"OAuth REST"| FleetAPI
+  App -->|"POI sync"| OpenData
+  App -->|"WSS stream"| Telemetry
 ```
 
 ## 3. C4 Level 3 — 컴포넌트 (KMP shared)
@@ -217,6 +213,7 @@ flowchart TB
 |---|---|
 | **Shared First** | UI·로직·데이터 90%+ commonMain |
 | **expect/actual Last** | BT, STT, Audio, Storage만 플랫폼 분리 |
-| **Single Source of Truth** | Fleet API = 차량 상태 유일 소스 |
+| **Single Source of Truth** | Fleet API = 차량 상태 유일 소스 (BLE는 근접·자동실행 보조) |
+| **Remote First** | BLE 없어도 OAuth 세션으로 vehicle_data를 폴링해 Gauge를 채운다 |
 | **Local First (SpeedCam)** | POI DB 로컬, 네트워크 불필요 |
 | **Adaptive by Default** | WindowSizeClass 기반, hardcode 금지 |

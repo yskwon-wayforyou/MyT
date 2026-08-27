@@ -16,8 +16,16 @@ actual class HapticPlatform actual constructor(context: Any) {
             ctx.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
         }
     }
+    private var hapticsSuppressed: Boolean = false
+
+    actual fun setHapticsSuppressed(suppressed: Boolean) {
+        hapticsSuppressed = suppressed
+    }
+
+    actual fun areHapticsSuppressed(): Boolean = hapticsSuppressed
 
     actual fun vibrate(durationMs: Long) {
+        if (hapticsSuppressed) return
         vibrator?.vibrate(VibrationEffect.createOneShot(durationMs, VibrationEffect.DEFAULT_AMPLITUDE))
     }
 }

@@ -22,8 +22,10 @@ interface BluetoothRepository {
 }
 
 interface TokenRepository {
-    suspend fun saveAccessToken(token: String)
+    suspend fun saveAccessToken(token: String, expiresAtMs: Long? = null)
     suspend fun getAccessToken(): String?
+    suspend fun getAccessTokenExpiresAt(): Long?
+    suspend fun isAccessTokenExpired(nowMs: Long): Boolean
     suspend fun saveRefreshToken(token: String)
     suspend fun getRefreshToken(): String?
     suspend fun clearTokens()
@@ -37,4 +39,8 @@ interface SettingsRepository {
     suspend fun setSpeedUnitKmh(useKmh: Boolean)
     suspend fun isOnboardingComplete(): Boolean
     suspend fun setOnboardingComplete(complete: Boolean)
+    suspend fun getGaugeDisplayPrefs(): com.myt.domain.model.GaugeDisplayPrefs
+    suspend fun setGaugeDisplayPrefs(prefs: com.myt.domain.model.GaugeDisplayPrefs)
+    suspend fun isDarkTheme(): Boolean
+    suspend fun setDarkTheme(enabled: Boolean)
 }

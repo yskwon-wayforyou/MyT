@@ -1,5 +1,129 @@
--- Speed camera POI (Phase 1 schema stub)
-CREATE TABLE speed_camera (
+-- History & local cache (Phase 1.5+)
+
+CREATE TABLE trip_record (
+    id TEXT PRIMARY KEY NOT NULL,
+    vin TEXT NOT NULL,
+    started_at_ms INTEGER NOT NULL,
+    ended_at_ms INTEGER,
+    distance_km REAL NOT NULL DEFAULT 0,
+    avg_speed_kmh REAL,
+    max_speed_kmh REAL,
+    start_soc REAL,
+    end_soc REAL,
+    polyline_encoded TEXT,
+    efficiency_km_per_kwh REAL
+);
+
+CREATE INDEX idx_trip_started ON trip_record(started_at_ms DESC);
+
+CREATE TABLE charge_session (
+    id TEXT PRIMARY KEY NOT NULL,
+    vin TEXT NOT NULL,
+    started_at_ms INTEGER NOT NULL,
+    ended_at_ms INTEGER,
+    start_soc REAL NOT NULL,
+    end_soc REAL,
+    energy_kwh REAL,
+    peak_kw REAL
+);
+
+CREATE INDEX idx_charge_started ON charge_session(started_at_ms DESC);
+
+CREATE TABLE fleet_api_event (
+    id TEXT PRIMARY KEY NOT NULL,
+    at_ms INTEGER NOT NULL,
+    category TEXT NOT NULL,
+    ok INTEGER NOT NULL DEFAULT 1,
+    detail TEXT
+);
+
+CREATE INDEX idx_fleet_at ON fleet_api_event(at_ms DESC);
+
+CREATE TABLE vehicle_snapshot (
+    vin TEXT PRIMARY KEY NOT NULL,
+    payload_json TEXT NOT NULL,
+    updated_at_ms INTEGER NOT NULL,
+    from_cache INTEGER NOT NULL DEFAULT 0
+);
+
+-- Trips
+insertTrip:
+INSERT OR REPLACE INTO trip_record(
+    id,
+    vin,
+    started_at_ms,
+    ended_at_ms,
+    distance_km,
+    avg_speed_kmh,
+    max_speed_kmh,
+    start_soc,
+    end_soc,
+    polyline_encoded,
+    efficiency_km_per_kwh
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+updateTripEnd:
+UPDATE trip_record
+SET ended_at_ms = ?,
+    distance_km = ?,
+    avg_speed_kmh = ?,
+    max_speed_kmh = ?,
+    end_soc = ?,
+    polyline_encoded = ?,
+    efficiency_km_per_kwh = ?
+WHERE id = ?;
+
+selectAllTrips:
+SELECT * FROM trip_record ORDER BY started_at_ms DESC;
+
+selectTripsSince:
+SELECT * FROM trip_record WHERE started_at_ms >= ? ORDER BY started_at_ms DESC;
+
+selectTripsOrderByDistance:
+SELECT * FROM trip_record ORDER BY distance_km DESC;
+
+selectTripById:
+SELECT * FROM trip_record WHERE id = ? LIMIT 1;
+
+-- Charge
+insertChargeSession:
+INSERT OR REPLACE INTO charge_session(
+    id, vin, started_at_ms, ended_at_ms, start_soc, end_soc, energy_kwh, peak_kw
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+selectAllChargeSessions:
+SELECT * FROM charge_session ORDER BY started_at_ms DESC;
+
+selectChargeSince:
+SELECT * FROM charge_session WHERE started_at_ms >= ? ORDER BY started_at_ms DESC;
+
+selectChargeOrderByEnergy:
+SELECT * FROM charge_session ORDER BY energy_kwh DESC;
+
+-- Fleet API events
+insertFleetEvent:
+INSERT OR REPLACE INTO fleet_api_event(id, at_ms, category, ok, detail)
+VALUES (?, ?, ?, ?, ?);
+
+selectAllFleetEvents:
+SELECT * FROM fleet_api_event ORDER BY at_ms DESC;
+
+selectFleetEventsSince:
+SELECT * FROM fleet_api_event WHERE at_ms >= ? ORDER BY at_ms DESC;
+
+selectFleetEventsByCategory:
+SELECT * FROM fleet_api_event WHERE category = ? ORDER BY at_ms DESC;
+
+-- Vehicle snapshot cache
+upsertVehicleSnapshot:
+INSERT OR REPLACE INTO vehicle_snapshot(vin, payload_json, updated_at_ms, from_cache)
+VALUES (?, ?, ?, ?);
+
+selectVehicleSnapshot:
+SELECT * FROM vehicle_snapshot WHERE vin = ? LIMIT 1;
+
+-- Legacy POI stub tables (kept for compatibility)
+CREATE TABLE IF NOT EXISTS speed_camera (
     id TEXT PRIMARY KEY,
     latitude REAL NOT NULL,
     longitude REAL NOT NULL,
@@ -10,9 +134,33 @@ CREATE TABLE speed_camera (
     section_length INTEGER
 );
 
-CREATE INDEX idx_camera_location ON speed_camera(latitude, longitude);
+CREATE INDEX IF NOT EXISTS idx_speed_camera_lat ON speed_camera(latitude);
+CREATE INDEX IF NOT EXISTS idx_speed_camera_lng ON speed_camera(longitude);
 
-CREATE TABLE settings (
+upsertSpeedCamera:
+INSERT OR REPLACE INTO speed_camera(
+    id,
+    latitude,
+    longitude,
+    road_name,
+    road_direction,
+    speed_limit,
+    camera_type,
+    section_length
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+selectSpeedCamerasInBox:
+SELECT * FROM speed_camera
+WHERE latitude BETWEEN ? AND ?
+  AND longitude BETWEEN ? AND ?;
+
+selectAllSpeedCameras:
+SELECT * FROM speed_camera;
+
+countSpeedCameras:
+SELECT COUNT(*) FROM speed_camera;
+
+CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
 );

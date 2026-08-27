@@ -33,7 +33,31 @@ sdk.dir=/Users/wayforyou/Library/Android/sdk
 
 예시: `local.properties.example` 참고.
 
+## Android APK 빌드 · 설치 · 리그레션
+
+```bash
+# 권장: 빌드 + 단말 설치 + 정형 리그레션 (히스토리 자동 갱신)
+./scripts/build-install-regress.sh
+
+# 기존 빌드 스크립트 — 단말 연결 시 리그레션 포함
+./scripts/build-android-apk.sh
+
+# 리그레션만
+./scripts/device_regression_test.sh
+
+# 리그레션 생략
+SKIP_DEVICE_REGRESSION=1 ./scripts/build-android-apk.sh
+```
+
+스위트/히스토리:
+
+- [device-regression-suite.md](./device-regression-suite.md)
+- [device-regression-history.md](./device-regression-history.md)
+
+---
+
 ## 0. Tesla Developer (Fleet API)
+
 
 Phase 1 OAuth·차량 데이터 연동 전에 [tesla-developer-setup.md](tesla-developer-setup.md) 를 따라 등록하세요.
 

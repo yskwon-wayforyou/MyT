@@ -22,6 +22,13 @@ class VoiceNavUseCase(
         )
     }
 
+    suspend fun recognizeAndSend(locale: String = "ko-KR"): VoiceNavResult {
+        return when (val recognized = recognizeDestination(locale)) {
+            is VoiceNavResult.Recognized -> sendDestination(recognized.destination)
+            else -> recognized
+        }
+    }
+
     suspend fun sendDestination(destination: String): VoiceNavResult {
         val vin = settingsRepository.getVin()
             ?: return VoiceNavResult.Failed("VIN not configured")

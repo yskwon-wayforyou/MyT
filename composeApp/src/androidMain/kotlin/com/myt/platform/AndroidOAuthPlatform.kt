@@ -8,7 +8,17 @@ import com.myt.MyTApplication
 actual class OAuthPlatform {
     actual fun openAuthorizationUrl(url: String) {
         val context = MyTApplication.instance
-        CustomTabsIntent.Builder().build().launchUrl(context, Uri.parse(url))
+        val uri = Uri.parse(url)
+        runCatching {
+            val tabs = CustomTabsIntent.Builder().build()
+            tabs.intent.data = uri
+            tabs.intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(tabs.intent)
+        }.recoverCatching {
+            context.startActivity(
+                Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+        }.getOrThrow()
     }
 
     companion object {

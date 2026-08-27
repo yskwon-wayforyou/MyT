@@ -5,6 +5,7 @@
 ```mermaid
 flowchart TB
   subgraph trigger [Trigger]
+    Launch[App_Launch_OAuth]
     BT[BLE_Connected]
     User[User_Action]
     Timer[Polling_Timer]
@@ -36,6 +37,7 @@ flowchart TB
     NavView[Nav_Dialog]
   end
 
+  Launch --> FleetPoll
   BT --> StateMachine
   Timer --> FleetPoll
   User --> STT
@@ -73,6 +75,7 @@ stateDiagram-v2
   BtSetup --> Idle: BT_Permission_Granted
 
   Idle --> BtDetected: PhoneKey_Connected
+  Idle --> Connecting: App_Open_with_OAuth
   BtDetected --> Launching: Auto_Launch
 
   Launching --> Connecting: UI_Ready
@@ -91,8 +94,9 @@ stateDiagram-v2
   Streaming --> Charging: ChargeState_Active
   Charging --> Streaming: ChargeState_End
 
-  Streaming --> Idle: BT_Disconnected_30s
-  Launching --> Idle: BT_Lost_Immediate
+  Streaming --> Idle: User_Exit
+  Launching --> Idle: Session_Cancelled
+  Idle --> Streaming: App_Foreground_Fleet_Poll
 
   Idle --> BtDetected: PhoneKey_Reconnected
 
@@ -114,7 +118,8 @@ sequenceDiagram
   participant VM as GaugeViewModel
   participant UI as Compose_UI
 
-  Timer->>Repo: tick(every_2s)
+  Timer->>Repo: tick(interval)
+  Note over Timer,UI: BLE 여부와 무관하게 OAuth 세션이면 폴링
   Repo->>API: GET /vehicles/{vin}/vehicle_data
   API->>Car: Wake + Fetch
   Car-->>API: drive_state, charge_state, climate_state
@@ -124,7 +129,8 @@ sequenceDiagram
   VM->>UI: recompose(GaugeState)
 
   Note over Timer,UI: 주차 시 interval → 30s
-  Note over Timer,UI: Sleep 시 → 60s + "대기 중" UI
+  Note over Timer,UI: Sleep 시 → wake_up 후 60s + "대기 중" UI
+  Note over Timer,UI: BLE 없음 → Fleet 원격 조회 유지, 상태 배지 FLEET
 ```
 
 ## 4. SpeedCam 엔진 흐름
@@ -258,7 +264,11 @@ classDiagram
     +NavInfo navigation
     +ChargeInfo charging
     +ConnectionStatus connection
-    +Long timestamp
+    +Boolean locked
+    +Float odometerKm
+    +Boolean sentryMode
+    +Boolean climateOn
+    +Boolean bluetoothPresent
   }
 
   class NavInfo {
@@ -278,6 +288,7 @@ classDiagram
     +Float socPercent
     +Float chargeRateKw
     +Float timeToFullMinutes
+    +String chargingState
     +Int chargeLimit
   }
 
@@ -307,10 +318,41 @@ classDiagram
 | Event | Publisher | Subscriber | Action |
 |---|---|---|---|
 | `BtConnected` | BTPlatform | PresenceUC | Launch Gauge |
-| `BtDisconnected` | BTPlatform | PresenceUC | Stop Gauge (30s delay) |
+| `BtDisconnected` | BTPlatform | PresenceUC | 자동실행만 해제. Fleet 폴링은 유지 |
 | `GaugeStateUpdated` | FleetRepo | GaugeUI, SpeedCamUC | Recompose |
 | `SpeedCamAlert` | SpeedCamUC | AlertUI, AudioPlatform | Show+Beep |
 | `NavDestinationSent` | VoiceNavUC | GaugeUI | Update NavInfo |
 | `TokenExpired` | FleetRepo | AuthUC | Re-login flow |
 | `LayoutChanged` | LayoutUC | GaugeUI | Re-layout |
 | `CarSleeping` | FleetRepo | GaugeUI | Show sleep UI |
+
+## 10. 히스토리 · 로컬 캐시 (Phase 1.5+)
+
+```mermaid
+flowchart LR
+  Poll[TelemetryUseCase] --> TTL{snapshot age < interval?}
+  TTL -->|yes| Cache[(vehicle_snapshot)]
+  TTL -->|no| Fleet[Fleet API]
+  Fleet --> Cache
+  Fleet --> TripRec[LocalTripRecorder]
+  Fleet --> ChargeRec[LocalChargeRecorder]
+  Quota[FleetQuotaUseCase] --> FleetLog[(fleet_api_event)]
+  Cache --> GaugeUI[Gauge UI]
+  TripRec --> TripDB[(trip_record)]
+  ChargeRec --> ChargeDB[(charge_session)]
+  HistoryUI[HistoryScreen] --> TripDB
+  HistoryUI --> ChargeDB
+  HistoryUI --> FleetLog
+```
+
+- **캐시 우선**: `vehicle_snapshot`이 폴링 간격보다 신선하면 Fleet API 호출 생략
+- **오프라인/쿼터**: fetch 실패 시 DB 스냅샷으로 게이지 표시
+- 상세 설계: [history-and-voice-design.md](../05-design/history-and-voice-design.md)
+
+## 11. 디버그 로그 · Gmail 내보내기
+
+- **DebugLogger**: 링 버퍼(최대 2,000건), DEBUG/INFO/WARN/ERROR, 토큰·VIN·secret 자동 마스킹
+- **수집 위치**: App/Lifecycle, Telemetry, Fleet API, Quota, Auth, Voice
+- **UI**: 설정 → 「디버그 로그 보기 / Gmail 전송」→ `Route.DebugLogs`
+- **내보내기**: UTF-8 `.txt` 리포트 + Gmail 우선 `ACTION_SEND` (미설치 시 공유 시트)
+- **iOS**: `UIActivityViewController` 공유 (Mail 포함)

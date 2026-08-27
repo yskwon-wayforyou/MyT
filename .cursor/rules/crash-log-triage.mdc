@@ -1,0 +1,14 @@
+---
+description: 앱 크래시/강제종료 보고 시 crash-log-triage 인프라를 우선 사용
+alwaysApply: true
+---
+
+# Crash / force-stop triage
+
+사용자가 MyT 앱 **강제 종료·크래시·Exception·비정상 종료**를 말하면:
+
+1. `.cursor/commands/crash-log-triage.md` 절차를 따른다.
+2. `./scripts/crash_log_triage.sh all`로 단말 로그·펜딩 이슈를 수집한다.
+3. `build/device-debug/crash-logs/*/SUMMARY.md` 근거로 최소 수정 후 `./scripts/device_apk_debug_loop.sh all`로 재검증한다.
+
+앱은 WARN/ERROR를 `files/debug_logs/myt-runtime.log`에 실시간 기록하고, 크래시 시 `files/crash_reports/` + `files/pending_github_issues/`에 남긴다. 재시작 시 `CrashIssueSyncUseCase`가 GitHub 업로드를 시도한다.

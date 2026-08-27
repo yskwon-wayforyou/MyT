@@ -1,0 +1,2 @@
+ALTER TABLE trip_record ADD COLUMN polyline_encoded TEXT;
+ALTER TABLE trip_record ADD COLUMN efficiency_km_per_kwh REAL;
