@@ -60,7 +60,7 @@ import com.myt.domain.automation.AutomationRepository
 import com.myt.domain.automation.ClimateScheduleEngine
 import com.myt.domain.automation.ClimateScheduleRepository
 import com.myt.domain.automation.LocalAutomationEngine
-import com.myt.domain.automation.LocalAutomationRepository
+import com.myt.domain.automation.SettingsAutomationRepository
 import com.myt.domain.automation.SettingsClimateScheduleRepository
 import com.myt.domain.control.DemoVehicleControlGateway
 import com.myt.domain.control.FleetVehicleControlGateway
@@ -177,10 +177,18 @@ val domainModule = module {
     single { CarbonBadgeUseCase(get()) }
     single { DemoLiveCameraClient() }
     single<LiveCameraClient> { get<DemoLiveCameraClient>() }
-    single<AutomationRepository> { LocalAutomationRepository() }
+    single<AutomationRepository> { SettingsAutomationRepository(get()) }
     single<ClimateScheduleRepository> { SettingsClimateScheduleRepository(get()) }
     single<PushNotifier> { InAppPushNotifier() }
-    single { LocalAutomationEngine(get(), get(), get()) }
+    single {
+        LocalAutomationEngine(
+            repository = get(),
+            pushNotifier = get(),
+            scope = get(),
+            controlGateway = get(),
+            settingsRepository = get(),
+        )
+    }
     single {
         ClimateScheduleEngine(
             repository = get(),

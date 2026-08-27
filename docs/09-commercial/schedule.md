@@ -58,7 +58,7 @@ gantt
 ### W3 — 제어 패리티 · 자동화 · FCM · 공조 세밀 예약
 
 - [x] Dog/Camp/Sentry/창문/충전포트 등 (퀵 컨트롤 Fleet 매핑 · 서명/VK는 후속)
-- [ ] 자동화 CRUD + 스케줄·지오펜스(1차)
+- [x] 자동화 CRUD + 스케줄·지오펜스(1차) (Settings 영속 · 스케줄 30s · 지오펜스 진입/이탈 · More 허브 UI)
 - [x] **FR-V06a 공조 세밀 예약** 기반 (모델·저장·30s 스케줄러·More 허브 UI · set_temps/열선 Fleet 세부는 후속)
 - [ ] FCM + 채널 + 절전 가이드
 - [ ] 다중 VIN 전환 UX
