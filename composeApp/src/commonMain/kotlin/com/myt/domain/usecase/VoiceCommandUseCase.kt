@@ -26,7 +26,9 @@ class VoiceCommandUseCase(
     suspend fun listenAndExecute(locale: String = "ko-KR"): VoiceCommandResult {
         val raw = speechPlatform.recognizeSpeech(locale).getOrElse {
             debugLogger.w("Voice", "STT failed: ${it.message}")
-            return VoiceCommandResult.Failed(it.message ?: "음성 인식 실패")
+            return VoiceCommandResult.Failed(
+                com.myt.domain.voice.SpeechErrorMessages.humanize(it.message),
+            )
         }
         debugLogger.i("Voice", "Recognized: $raw")
         return execute(raw)

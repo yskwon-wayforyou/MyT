@@ -58,6 +58,7 @@ import com.myt.ui.theme.TeslaGlassPanel
 import com.myt.ui.theme.TeslaScreen
 import com.myt.ui.theme.accentBlue
 import com.myt.ui.ConnectionErrorKind
+import com.myt.ui.gauge.DriveSafetyBanner
 import com.myt.ui.gauge.connectionErrorKind
 import com.myt.domain.model.Gear
 
@@ -81,6 +82,8 @@ fun AdaptiveGaugeLayout(
     mapDisplayLatitude: Double? = null,
     mapDisplayLongitude: Double? = null,
     mapMarkers: List<LiveMapMarker> = emptyList(),
+    showDriveSafetyBanner: Boolean = false,
+    onAcknowledgeDriveSafety: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val layoutUseCase = remember { AdaptiveLayoutUseCase() }
@@ -127,6 +130,8 @@ fun AdaptiveGaugeLayout(
                 mapDisplayLatitude = mapDisplayLatitude,
                 mapDisplayLongitude = mapDisplayLongitude,
                 mapMarkers = mapMarkers,
+                showDriveSafetyBanner = showDriveSafetyBanner,
+                onAcknowledgeDriveSafety = onAcknowledgeDriveSafety,
             )
             LayoutConfig.SinglePane -> GaugeSinglePaneLayout(
                 state = state,
@@ -147,6 +152,8 @@ fun AdaptiveGaugeLayout(
                 mapDisplayLatitude = mapDisplayLatitude,
                 mapDisplayLongitude = mapDisplayLongitude,
                 mapMarkers = mapMarkers,
+                showDriveSafetyBanner = showDriveSafetyBanner,
+                onAcknowledgeDriveSafety = onAcknowledgeDriveSafety,
             )
             LayoutConfig.TwoPane -> GaugeTwoPaneLayout(
                 state = state,
@@ -164,6 +171,8 @@ fun AdaptiveGaugeLayout(
                 prefs = prefs,
                 useKmh = useKmh,
                 onRequestFreshData = onRequestFreshData,
+                showDriveSafetyBanner = showDriveSafetyBanner,
+                onAcknowledgeDriveSafety = onAcknowledgeDriveSafety,
             )
             LayoutConfig.ThreePane -> GaugeThreePaneLayout(
                 state = state,
@@ -181,6 +190,8 @@ fun AdaptiveGaugeLayout(
                 prefs = prefs,
                 useKmh = useKmh,
                 onRequestFreshData = onRequestFreshData,
+                showDriveSafetyBanner = showDriveSafetyBanner,
+                onAcknowledgeDriveSafety = onAcknowledgeDriveSafety,
             )
         }
     }
@@ -206,6 +217,8 @@ fun GaugeSinglePaneLayout(
     mapDisplayLatitude: Double? = null,
     mapDisplayLongitude: Double? = null,
     mapMarkers: List<LiveMapMarker> = emptyList(),
+    showDriveSafetyBanner: Boolean = false,
+    onAcknowledgeDriveSafety: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val charging = state.charging?.isCharging == true
@@ -225,6 +238,10 @@ fun GaugeSinglePaneLayout(
                     showUsageChip = false,
                 )
                 ConnectionErrorBanner(kind = errorKind, onRetry = onRetry, onDismissHome = onHome)
+                DriveSafetyBanner(
+                    visible = showDriveSafetyBanner,
+                    onAcknowledge = onAcknowledgeDriveSafety,
+                )
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -282,6 +299,8 @@ fun GaugeLandscapeLayout(
     mapDisplayLatitude: Double? = null,
     mapDisplayLongitude: Double? = null,
     mapMarkers: List<LiveMapMarker> = emptyList(),
+    showDriveSafetyBanner: Boolean = false,
+    onAcknowledgeDriveSafety: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val charging = state.charging?.isCharging == true
@@ -302,6 +321,10 @@ fun GaugeLandscapeLayout(
                     showUsageChip = false,
                 )
                 ConnectionErrorBanner(kind = errorKind, onRetry = onRetry, onDismissHome = onHome)
+                DriveSafetyBanner(
+                    visible = showDriveSafetyBanner,
+                    onAcknowledge = onAcknowledgeDriveSafety,
+                )
                 ClusterDriveHome(
                     state = state,
                     useKmh = useKmh,
@@ -349,6 +372,8 @@ fun GaugeTwoPaneLayout(
     prefs: GaugeDisplayPrefs = GaugeDisplayPrefs(),
     useKmh: Boolean = true,
     onRequestFreshData: (UiFreshNeed) -> Unit = {},
+    showDriveSafetyBanner: Boolean = false,
+    onAcknowledgeDriveSafety: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     GaugeLandscapeLayout(
@@ -367,6 +392,8 @@ fun GaugeTwoPaneLayout(
         prefs = prefs,
         useKmh = useKmh,
         onRequestFreshData = onRequestFreshData,
+        showDriveSafetyBanner = showDriveSafetyBanner,
+        onAcknowledgeDriveSafety = onAcknowledgeDriveSafety,
         modifier = modifier,
     )
 }
@@ -388,6 +415,8 @@ fun GaugeThreePaneLayout(
     prefs: GaugeDisplayPrefs = GaugeDisplayPrefs(),
     useKmh: Boolean = true,
     onRequestFreshData: (UiFreshNeed) -> Unit = {},
+    showDriveSafetyBanner: Boolean = false,
+    onAcknowledgeDriveSafety: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     GaugeLandscapeLayout(
@@ -406,6 +435,8 @@ fun GaugeThreePaneLayout(
         prefs = prefs,
         useKmh = useKmh,
         onRequestFreshData = onRequestFreshData,
+        showDriveSafetyBanner = showDriveSafetyBanner,
+        onAcknowledgeDriveSafety = onAcknowledgeDriveSafety,
         modifier = modifier,
     )
 }

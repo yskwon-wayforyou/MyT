@@ -50,8 +50,10 @@ gantt
 
 - [ ] Gauge/SpeedCam/BT/테마 실차 QA
 - [ ] POI OTA·오탐 로그, 지도 품질
-- [ ] 운전 중 고지 UX
+- [x] 운전 중 고지 UX (Q-DRV-01 배너 + STT 오류 문구 인간화)
 - [ ] 2주 실차 무중단 게이트 착수
+- [ ] A13 BT Doze/배터리 예외 안내
+- [ ] A14–A15 POI sync 실패·신선도 UX
 
 ### W3 — 제어 패리티 · 자동화 · FCM · 공조 세밀 예약
 

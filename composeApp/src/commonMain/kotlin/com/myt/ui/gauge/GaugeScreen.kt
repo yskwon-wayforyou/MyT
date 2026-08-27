@@ -43,6 +43,7 @@ fun GaugeScreen(
     val mapLocation by viewModel.mapDisplayLocation.collectAsState()
     val mapMarkers by viewModel.mapMarkers.collectAsState()
     val bluetoothPresent by viewModel.bluetoothPresent.collectAsState()
+    val driveSafetyAck by viewModel.driveSafetyAck.collectAsState()
     var overlay by remember { mutableStateOf(GaugeOverlay.None) }
 
     LaunchedEffect(overlay) {
@@ -121,6 +122,8 @@ fun GaugeScreen(
             mapDisplayLatitude = mapLocation?.first,
             mapDisplayLongitude = mapLocation?.second,
             mapMarkers = mapMarkers,
+            showDriveSafetyBanner = !driveSafetyAck,
+            onAcknowledgeDriveSafety = { viewModel.acknowledgeDriveSafety() },
             modifier = modifier,
         )
     }

@@ -148,6 +148,9 @@ class GaugeViewModel(
     private val _darkTheme = MutableStateFlow(true)
     val darkTheme: StateFlow<Boolean> = _darkTheme.asStateFlow()
 
+    private val _driveSafetyAck = MutableStateFlow(true)
+    val driveSafetyAck: StateFlow<Boolean> = _driveSafetyAck.asStateFlow()
+
     val connectionStatus: StateFlow<ConnectionStatus> = gaugeState
         .combine(gaugeState) { state, _ -> state.connection }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ConnectionStatus.Disconnected)
@@ -165,6 +168,7 @@ class GaugeViewModel(
             _gaugePrefs.value = settingsRepository.getGaugeDisplayPrefs()
             telemetryUseCase.setPreferDeviceSpeed(_gaugePrefs.value.preferDeviceSpeed)
             _darkTheme.value = settingsRepository.isDarkTheme()
+            _driveSafetyAck.value = settingsRepository.isDriveSafetyAcknowledged()
         }
         refreshAuthState()
         viewModelScope.launch {
@@ -299,6 +303,13 @@ class GaugeViewModel(
         _darkTheme.value = enabled
         viewModelScope.launch {
             settingsRepository.setDarkTheme(enabled)
+        }
+    }
+
+    fun acknowledgeDriveSafety() {
+        _driveSafetyAck.value = true
+        viewModelScope.launch {
+            settingsRepository.setDriveSafetyAcknowledged(true)
         }
     }
 

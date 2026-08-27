@@ -49,4 +49,6 @@ interface SettingsRepository {
     suspend fun setGaugeDisplayPrefs(prefs: com.myt.domain.model.GaugeDisplayPrefs)
     suspend fun isDarkTheme(): Boolean
     suspend fun setDarkTheme(enabled: Boolean)
+    suspend fun isDriveSafetyAcknowledged(): Boolean
+    suspend fun setDriveSafetyAcknowledged(acknowledged: Boolean)
 }

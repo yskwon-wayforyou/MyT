@@ -18,7 +18,9 @@ class VoiceNavUseCase(
     suspend fun recognizeDestination(locale: String = "ko-KR"): VoiceNavResult {
         return speechPlatform.recognizeSpeech(locale).fold(
             onSuccess = { VoiceNavResult.Recognized(it) },
-            onFailure = { VoiceNavResult.Failed(it.message ?: "Speech recognition failed") },
+            onFailure = {
+                VoiceNavResult.Failed(com.myt.domain.voice.SpeechErrorMessages.humanize(it.message))
+            },
         )
     }
 

@@ -46,11 +46,19 @@ class SettingsRepositoryImpl(
         settings.putBoolean(KEY_DARK_THEME, enabled)
     }
 
+    override suspend fun isDriveSafetyAcknowledged(): Boolean =
+        settings.getBoolean(KEY_DRIVE_SAFETY, defaultValue = false)
+
+    override suspend fun setDriveSafetyAcknowledged(acknowledged: Boolean) {
+        settings.putBoolean(KEY_DRIVE_SAFETY, acknowledged)
+    }
+
     companion object {
         private const val KEY_VIN = "vin"
         private const val KEY_SPEED_KMH = "speed_unit_kmh"
         private const val KEY_ONBOARDING = "onboarding_complete"
         private const val KEY_GAUGE_PREFS = "gauge_display_prefs_v1"
         private const val KEY_DARK_THEME = "dark_theme_v1"
+        private const val KEY_DRIVE_SAFETY = "drive_safety_ack_v1"
     }
 }
