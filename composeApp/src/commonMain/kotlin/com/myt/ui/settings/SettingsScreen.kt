@@ -79,9 +79,15 @@ fun SettingsScreen(
     val authUseCase = koinInject<AuthUseCase>()
     val voiceCommandUseCase = koinInject<VoiceCommandUseCase>()
     val batteryOptimization = koinInject<BatteryOptimizationPlatform>()
+    val localNotify = koinInject<com.myt.platform.LocalNotificationPlatform>()
+    val pushNotifier = koinInject<com.myt.phase2.PushNotifier>()
     val scope = rememberCoroutineScope()
     var authTestMsg by remember { mutableStateOf<String?>(null) }
     var voiceTestMsg by remember { mutableStateOf<String?>(null) }
+    var notifyHint by remember { mutableStateOf<String?>(null) }
+    var fleetVehicles by remember { mutableStateOf<List<com.myt.data.fleet.TeslaVehicleSummary>>(emptyList()) }
+    var fleetVehiclesMsg by remember { mutableStateOf<String?>(null) }
+    var fleetVehiclesLoading by remember { mutableStateOf(false) }
     var appId by remember { mutableStateOf(teslaConfig.appId) }
     var clientId by remember { mutableStateOf(teslaConfig.clientId) }
     var clientSecret by remember { mutableStateOf(teslaConfig.clientSecret) }
@@ -227,28 +233,29 @@ fun SettingsScreen(
                         )
                     }
                 }
-                SectionTitle("Bluetooth · 자동 실행")
+                SectionTitle("알림 · 절전")
                 TeslaCard(modifier = Modifier.fillMaxWidth(), accent = colors.accentBlue) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
-                            "백그라운드에서 Phone Key 감지",
+                            "제어·충전·자동화 알림 채널",
                             color = colors.textPrimary,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 15.sp,
                         )
                         Text(
-                            "일부 제조사 배터리 절전 때문에 차량 연결 시 자동 실행이 막힐 수 있어요. MyT를 배터리 최적화 예외로 두면 안정적입니다.",
+                            "로컬 시스템 알림을 사용합니다. FCM 원격 푸시는 Firebase 연동 후 같은 채널로 이어집니다. " +
+                                "제조사 절전·Doze에 막히지 않으려면 알림 허용과 배터리 예외를 함께 켜 주세요.",
                             color = colors.textSecondary,
                             fontSize = 12.sp,
                         )
-                        var batteryHint by remember { mutableStateOf<String?>(null) }
                         Button(
                             onClick = {
-                                val opened = batteryOptimization.openBatteryOptimizationSettings()
-                                batteryHint = if (opened) {
-                                    "시스템 설정을 열었습니다. MyT를 최적화 예외로 허용해 주세요."
+                                localNotify.ensureChannels()
+                                val opened = localNotify.openAppNotificationSettings()
+                                notifyHint = if (opened) {
+                                    "앱 알림 설정을 열었습니다. MyT 알림을 허용해 주세요."
                                 } else {
-                                    "이 기기에서는 설정 화면을 열 수 없습니다. 앱 정보 → 배터리에서 직접 예외를 허용해 주세요."
+                                    "알림 설정을 열 수 없습니다. 시스템 앱 정보 → 알림에서 허용해 주세요."
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(
@@ -256,10 +263,125 @@ fun SettingsScreen(
                                 contentColor = colors.bg,
                             ),
                         ) {
+                            Text("알림 설정 열기", fontSize = 13.sp)
+                        }
+                        Button(
+                            onClick = {
+                                val opened = batteryOptimization.openBatteryOptimizationSettings()
+                                notifyHint = if (opened) {
+                                    "배터리 설정을 열었습니다. MyT를 최적화 예외로 허용해 주세요."
+                                } else {
+                                    "이 기기에서는 설정 화면을 열 수 없습니다. 앱 정보 → 배터리에서 직접 예외를 허용해 주세요."
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colors.surfaceHigh,
+                                contentColor = colors.textPrimary,
+                            ),
+                        ) {
                             Text("배터리 예외 설정 열기", fontSize = 13.sp)
                         }
-                        batteryHint?.let {
+                        TextButton(
+                            onClick = {
+                                scope.launch {
+                                    pushNotifier.notify("MyT 알림 테스트", "제어·충전·자동화 채널이 정상입니다.")
+                                    notifyHint = "테스트 알림을 보냈습니다. 알림창을 확인해 주세요."
+                                }
+                            },
+                        ) {
+                            Text("테스트 알림 보내기", color = colors.accentBlue, fontSize = 13.sp)
+                        }
+                        notifyHint?.let {
                             Text(it, color = colors.textSecondary, fontSize = 12.sp)
+                        }
+                    }
+                }
+                SectionTitle("차량 선택 (다중 VIN)")
+                TeslaCard(modifier = Modifier.fillMaxWidth(), accent = colors.accent) {
+                    Column(modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            "Fleet에 등록된 차량 중 활성 VIN을 고릅니다. 전환 후 계기판·제어가 해당 차량을 봅니다.",
+                            color = colors.textSecondary,
+                            fontSize = 12.sp,
+                        )
+                        Text(
+                            "현재 …${vehicleVin.takeLast(6).ifBlank { "미설정" }}",
+                            color = colors.textPrimary,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Button(
+                            onClick = {
+                                fleetVehiclesLoading = true
+                                fleetVehiclesMsg = null
+                                scope.launch {
+                                    authUseCase.listFleetVehicles().fold(
+                                        onSuccess = { list ->
+                                            fleetVehicles = list
+                                            fleetVehiclesMsg = if (list.isEmpty()) {
+                                                "등록된 차량이 없습니다. Tesla 계정·권한을 확인해 주세요."
+                                            } else {
+                                                "${list.size}대 불러옴"
+                                            }
+                                        },
+                                        onFailure = {
+                                            fleetVehicles = emptyList()
+                                            fleetVehiclesMsg = "목록 실패: ${it.message}"
+                                        },
+                                    )
+                                    fleetVehiclesLoading = false
+                                }
+                            },
+                            enabled = !fleetVehiclesLoading,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colors.accent,
+                                contentColor = colors.bg,
+                            ),
+                        ) {
+                            Text(
+                                if (fleetVehiclesLoading) "불러오는 중…" else "Fleet 차량 목록",
+                                fontSize = 13.sp,
+                            )
+                        }
+                        fleetVehiclesMsg?.let {
+                            Text(it, color = colors.textSecondary, fontSize = 12.sp)
+                        }
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            fleetVehicles.forEach { v ->
+                                val vin = v.vin?.trim().orEmpty()
+                                if (vin.isBlank()) return@forEach
+                                val selected = vin.equals(vehicleVin, ignoreCase = true)
+                                FilterChip(
+                                    selected = selected,
+                                    onClick = {
+                                        vehicleVin = vin.uppercase()
+                                        scope.launch {
+                                            authUseCase.selectActiveVehicle(vin)
+                                            onSaveTeslaConfig(
+                                                teslaConfig.copy(vehicleVin = vin.uppercase()),
+                                            )
+                                            fleetVehiclesMsg = "활성 VIN …${vin.takeLast(6)}"
+                                        }
+                                    },
+                                    label = {
+                                        Text(
+                                            buildString {
+                                                append(v.displayName?.takeIf { it.isNotBlank() } ?: "Vehicle")
+                                                append(" · …")
+                                                append(vin.takeLast(6))
+                                                v.state?.let { append(" ($it)") }
+                                            },
+                                            fontSize = 12.sp,
+                                        )
+                                    },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = colors.accent.copy(alpha = 0.35f),
+                                    ),
+                                )
+                            }
                         }
                     }
                 }

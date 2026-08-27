@@ -3,6 +3,7 @@ package com.myt.domain.usecase
 import com.myt.debug.DebugLogger
 import com.myt.config.TeslaConfigStore
 import com.myt.data.fleet.KtorFleetRepository
+import com.myt.data.fleet.TeslaVehicleSummary
 import com.myt.domain.repository.SettingsRepository
 import com.myt.domain.repository.TokenRepository
 import com.myt.platform.OAuthPlatform
@@ -69,6 +70,16 @@ class AuthUseCase(
     suspend fun completeOnboarding(vin: String) {
         saveVin(vin)
         settingsRepository.setOnboardingComplete(true)
+    }
+
+    /** Fleet에 등록된 차량 목록 (다중 VIN 전환용). */
+    suspend fun listFleetVehicles(): Result<List<TeslaVehicleSummary>> =
+        fleetRepository.listVehicles()
+
+    /** 활성 VIN 전환 — 설정·텔레메트리 세션이 이 VIN을 본다. */
+    suspend fun selectActiveVehicle(vin: String) {
+        saveVin(vin)
+        debugLogger.i("Auth", "Active VIN …${vin.trim().takeLast(4)}")
     }
 
     private suspend fun saveVin(vin: String) {

@@ -60,8 +60,8 @@ gantt
 - [x] Dog/Camp/Sentry/창문/충전포트 등 (퀵 컨트롤 Fleet 매핑 · 서명/VK는 후속)
 - [x] 자동화 CRUD + 스케줄·지오펜스(1차) (Settings 영속 · 스케줄 30s · 지오펜스 진입/이탈 · More 허브 UI)
 - [x] **FR-V06a 공조 세밀 예약** 기반 (모델·저장·30s 스케줄러·More 허브 UI · set_temps/열선 Fleet 세부는 후속)
-- [ ] FCM + 채널 + 절전 가이드
-- [ ] 다중 VIN 전환 UX
+- [x] FCM + 채널 + 절전 가이드 (로컬 NotificationManager 채널·POST_NOTIFICATIONS·Settings 절전 가이드; FCM 토큰은 google-services 후속)
+- [x] 다중 VIN 전환 UX (Settings Fleet 목록·활성 VIN 저장·게이지 세션 재시작)
 - [x] 충전 상태 정규화 (Complete/한도도달 · 충전 중 캐시 skip 방지 · near-limit 45s 폴링)
 - [x] 음성 TTS 예시 주입 테스트 · YouTube Music 검색 명령
 
@@ -73,10 +73,10 @@ gantt
 ### W4 — 분석 · Camera · 위젯 · 차계부
 
 - [ ] Live Camera 실스트림 (Free 포함)
-- [ ] Glance 홈 위젯
+- [x] Glance 홈 위젯 (AppWidgetReceiver + SOC/주행거리 SharedPreferences 갱신 · Commercial 미리보기)
 - [ ] 배터리·FSD 실데이터
 - [x] **FR-CH10/11 충전 차계부** 1차 (SC/홈/공용 분류·추정 비용 · 기록 상세 · 분석 합산; 단가 설정·CSV 컬럼은 후속)
-- [ ] HA/Web 품질, Watch UI **제거**
+- [x] Watch UI **제거** (Commercial/More 허브 · Gauge Watch push 제거); HA/Web 품질은 후속
 
 ### 품질 핫픽스 (W3 병행)
 

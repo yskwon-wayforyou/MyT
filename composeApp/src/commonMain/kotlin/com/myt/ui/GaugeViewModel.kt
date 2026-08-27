@@ -40,11 +40,11 @@ import com.myt.domain.usecase.VoiceCommandUseCase
 import com.myt.domain.usecase.VoiceNavUseCase
 import com.myt.domain.automation.ClimateScheduleEngine
 import com.myt.domain.automation.LocalAutomationEngine
-import com.myt.phase2.WatchCompanionBridge
-import com.myt.phase2.WatchGaugePayload
+import com.myt.phase2.WidgetSnapshot
 import com.myt.phase3.FsdAnalytics
 import com.myt.phase3.HaRestStateBridge
 import com.myt.platform.ScreenPlatform
+import com.myt.platform.WidgetSnapshotPublisher
 import com.myt.ui.map.LiveMapMarker
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -76,7 +76,6 @@ class GaugeViewModel(
     private val roadSnapUseCase: RoadSnapUseCase,
     private val haRestStateBridge: HaRestStateBridge,
     private val haIntegrationConfigStore: HaIntegrationConfigStore,
-    private val watchCompanionBridge: WatchCompanionBridge,
     private val localAutomationEngine: LocalAutomationEngine,
     private val climateScheduleEngine: ClimateScheduleEngine,
 ) : ViewModel() {
@@ -141,7 +140,7 @@ class GaugeViewModel(
 
     private var lastMapSnapKey: String? = null
     private var lastHaPublishMs: Long = 0L
-    private var lastWatchPushMs: Long = 0L
+    private var lastWidgetPushMs: Long = 0L
 
     val oauthConfigured: Boolean get() = teslaConfigStore.current().isOAuthConfigured()
 
@@ -180,7 +179,7 @@ class GaugeViewModel(
                 speedCamUseCase.evaluateFromGaugeState(state)
                 updateLayout()
                 publishHaIfNeeded(state)
-                pushWatchIfNeeded(state)
+                publishWidgetIfNeeded(state)
                 FsdAnalytics.recordDemoDriveTick(state.speedKmh, state.isSimulated)
             }
         }
@@ -442,22 +441,18 @@ class GaugeViewModel(
         }
     }
 
-    private fun pushWatchIfNeeded(state: GaugeState) {
+    private fun publishWidgetIfNeeded(state: GaugeState) {
         val now = kotlinx.datetime.Clock.System.now().toEpochMilliseconds()
-        if (now - lastWatchPushMs < WATCH_PUSH_INTERVAL_MS) return
-        lastWatchPushMs = now
-        viewModelScope.launch {
-            watchCompanionBridge.push(
-                WatchGaugePayload(
-                    socPercent = state.socPercent.toInt(),
-                    speedKmh = state.speedKmh.toInt(),
-                    rangeKm = state.rangeKm.toInt(),
-                    locked = state.locked,
-                    isCharging = state.charging?.isCharging == true,
-                    updatedAtMs = now,
-                ),
-            )
-        }
+        if (now - lastWidgetPushMs < WIDGET_PUSH_INTERVAL_MS) return
+        lastWidgetPushMs = now
+        WidgetSnapshotPublisher.publish(
+            WidgetSnapshot(
+                socPercent = state.socPercent.toInt(),
+                rangeKm = state.rangeKm.toInt(),
+                locked = state.locked,
+                updatedAtMs = now,
+            ),
+        )
     }
 
     private fun updateLayout() {
@@ -492,6 +487,6 @@ class GaugeViewModel(
         private const val POI_AUTO_SYNC_INITIAL_DELAY_MS = 60_000L
         private const val POI_AUTO_SYNC_INTERVAL_MS = 4L * 60 * 60 * 1000
         private const val HA_PUBLISH_INTERVAL_MS = 30_000L
-        private const val WATCH_PUSH_INTERVAL_MS = 15_000L
+        private const val WIDGET_PUSH_INTERVAL_MS = 15_000L
     }
 }

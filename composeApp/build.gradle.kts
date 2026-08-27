@@ -96,6 +96,8 @@ kotlin {
                 implementation(libs.sqldelight.android)
                 implementation(libs.multiplatform.settings.no.arg)
                 implementation(libs.osmdroid.android)
+                implementation(libs.androidx.glance.appwidget)
+                implementation(libs.androidx.glance.material3)
             }
         }
 

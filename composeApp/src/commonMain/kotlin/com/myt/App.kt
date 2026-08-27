@@ -132,7 +132,6 @@ fun App() {
                     composable<Route.Commercial> {
                         CommercialHubScreen(
                             billing = koinInject(),
-                            watchBridge = koinInject(),
                             widgetProvider = koinInject(),
                             onBack = { navController.popBackStack() },
                         )

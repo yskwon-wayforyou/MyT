@@ -85,7 +85,7 @@ fun MoreHubScreen(
                     SectionHairline()
                     HubRow("고급 분석", "배터리 · CO₂ 배지 · CSV 내보내기", colors.accentBlue, onAnalytics)
                     SectionHairline()
-                    HubRow("구독 / Watch", "샌드박스 플랜 · Watch·위젯 미리보기", colors.accentPurple, onCommercial)
+                    HubRow("구독 / 위젯", "샌드박스 플랜 · 홈 위젯 미리보기", colors.accentPurple, onCommercial)
                     SectionHairline()
                     HubRow("API 사용량", "테슬라API 쿼터 · \$10 크레딧", colors.accentPurple, onUsage)
                     SectionHairline()
@@ -113,7 +113,7 @@ fun MoreHubScreen(
             }
             ClimateSchedulePanel(repository = climateRepo, flat = true)
             Text(
-                "차량 제어·위젯 미리보기는 구독 / Watch에서 확인할 수 있습니다.",
+                "차량 제어는 퀵 컨트롤·More에서, 홈 위젯은 구독 / 위젯에서 확인할 수 있습니다.",
                 color = colors.textSecondary,
                 fontSize = 11.sp,
             )

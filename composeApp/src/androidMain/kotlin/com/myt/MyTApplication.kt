@@ -16,6 +16,7 @@ class MyTApplication : Application() {
             androidContext(this@MyTApplication)
         }
         initializeOsmdroid(this)
+        com.myt.platform.WidgetSnapshotPublisher.bind(this)
         runCatching {
             org.koin.core.context.GlobalContext.get().get<CrashReporterPlatform>().install()
         }

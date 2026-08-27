@@ -33,6 +33,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <application
@@ -83,6 +84,18 @@
             <intent-filter>
                 <action android:name="com.myt.action.DRIVE_SIM" />
             </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".widget.MyTGlanceWidgetReceiver"
+            android:exported="true"
+            android:label="MyT">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/myt_glance_widget_info" />
         </receiver>
 
         <provider

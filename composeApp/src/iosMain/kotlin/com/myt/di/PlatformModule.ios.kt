@@ -30,6 +30,7 @@ actual fun platformModule() = module {
     single { TextToSpeechPlatform(Unit) }
     single { AppInfoPlatform(Unit) }
     single { BatteryOptimizationPlatform(Unit) }
+    single { com.myt.platform.LocalNotificationPlatform(Unit) }
     single { LogExportPlatform(Unit) }
     single { com.myt.debug.IosPersistentLogSink() }
     single<com.myt.debug.PersistentLogSink> { get<com.myt.debug.IosPersistentLogSink>() }

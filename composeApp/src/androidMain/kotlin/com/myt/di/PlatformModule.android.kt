@@ -12,6 +12,7 @@ import com.myt.platform.SpeechPlatform
 import com.myt.platform.TextToSpeechPlatform
 import com.myt.platform.AppInfoPlatform
 import com.myt.platform.BatteryOptimizationPlatform
+import com.myt.platform.LocalNotificationPlatform
 import com.myt.platform.LogExportPlatform
 import com.myt.platform.CrashReporterPlatform
 import com.myt.data.local.DatabaseDriverFactory
@@ -31,6 +32,7 @@ actual fun platformModule() = module {
     single { TextToSpeechPlatform(androidContext()) }
     single { AppInfoPlatform(androidContext()) }
     single { BatteryOptimizationPlatform(androidContext()) }
+    single { LocalNotificationPlatform(androidContext()) }
     single { LogExportPlatform(androidContext()) }
     single { com.myt.debug.AndroidPersistentLogSink(androidContext()) }
     single<com.myt.debug.PersistentLogSink> { get<com.myt.debug.AndroidPersistentLogSink>() }

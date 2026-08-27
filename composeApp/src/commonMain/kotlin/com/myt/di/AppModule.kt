@@ -179,7 +179,11 @@ val domainModule = module {
     single<LiveCameraClient> { get<DemoLiveCameraClient>() }
     single<AutomationRepository> { SettingsAutomationRepository(get()) }
     single<ClimateScheduleRepository> { SettingsClimateScheduleRepository(get()) }
-    single<PushNotifier> { InAppPushNotifier() }
+    single<PushNotifier> {
+        val local = get<com.myt.platform.LocalNotificationPlatform>()
+        local.ensureChannels()
+        InAppPushNotifier(localNotify = { title, body -> local.post(title, body) })
+    }
     single {
         LocalAutomationEngine(
             repository = get(),

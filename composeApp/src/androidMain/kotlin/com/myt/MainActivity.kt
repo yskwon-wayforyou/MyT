@@ -34,6 +34,10 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestMultiplePermissions(),
     ) { /* PresenceService starts after grant on next monitoring cycle */ }
 
+    private val notificationPermission = registerForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { /* LocalNotificationPlatform posts when granted */ }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -44,9 +48,19 @@ class MainActivity : ComponentActivity() {
         }
         requestLocationPermissionsIfNeeded()
         requestBluetoothPermissionsIfNeeded()
+        requestNotificationPermissionIfNeeded()
         handleOAuthIntent(intent)
         setContent {
             App()
+        }
+    }
+
+    private fun requestNotificationPermissionIfNeeded() {
+        if (android.os.Build.VERSION.SDK_INT < 33) return
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+            != android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 

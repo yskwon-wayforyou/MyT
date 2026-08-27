@@ -140,12 +140,12 @@ flowchart LR
 | ID | 항목 | 구체화 | 현상태 | 구현 계획 | Wave |
 |---|---|---|---|---|---|
 | M44 | Live Camera | Fleet stream | ◐ 색프레임 | 실 스트림 + 배터리/정책 고지; **Free 출시에 포함**(D3) | W4 |
-| M36 | 홈 위젯 | Glance SOC/충전 | ◐ 미리보기 | Android Glance 실위젯 (Watch 아님) | W4 |
-| M34/M35 | Apple Watch / Wear OS | | ◐ 미리보기 | **✕ 제거·문서/UI에서 제외** | — |
+| M36 | 홈 위젯 | Glance SOC/충전 | ● Glance 1차 | 갱신 주기·충전 상태 표시 보강 | W4 |
+| M34/M35 | Apple Watch / Wear OS | | ✕ UI 제거 | 영구 제외 (D2) | — |
 | M39 | Home Assistant | REST/discovery | ◐ | 안정화·설치 가이드 | W4 |
 | M40 | HomeKit / Alexa | | ○ | iOS 이후 검토; Android 우선순위 낮음 | W7+ |
 | M41 | Web 대시보드 | `/dash` | ◐ | 읽기 품질 → 제어는 Fleet 이후 | W4 |
-| P15 | 다중 차량 | | ◐ | VIN 전환 UX (W3–W5) | W3 |
+| P15 | 다중 차량 | | ● Settings VIN 전환 | 온보딩 선택 UI 보강 | W3 |
 
 ### 3.7 플랫폼 · 스토어 · 수익 (D1, D3, D4)
 
