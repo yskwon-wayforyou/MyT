@@ -5,6 +5,7 @@ import com.myt.domain.repository.HistoryRepository
 import com.myt.domain.repository.SettingsRepository
 import com.myt.domain.voice.VoiceCommandExample
 import com.myt.domain.voice.VoiceCommandExamples
+import com.myt.domain.voice.VoiceFailureReporter
 import com.myt.platform.DeviceCommunications
 import com.myt.platform.SpeechRecognizer
 import com.myt.platform.TextToSpeech
@@ -24,6 +25,7 @@ class VoiceCommandUseCase(
     private val settingsRepository: SettingsRepository,
     private val historyRepository: HistoryRepository,
     private val debugLogger: DebugLogger,
+    private val voiceFailureReporter: VoiceFailureReporter? = null,
 ) {
     suspend fun listenAndExecute(locale: String = "ko-KR"): VoiceCommandResult {
         val raw = speech.recognizeSpeech(locale).getOrElse {
@@ -148,6 +150,9 @@ class VoiceCommandUseCase(
             }
         }
         debugLogger.i("Voice", "Command result=${result::class.simpleName}")
+        if (result is VoiceCommandResult.Failed) {
+            voiceFailureReporter?.report(text, result)
+        }
         return result
     }
 
@@ -210,12 +215,15 @@ class VoiceCommandUseCase(
     }
 
     private fun extractDestination(text: String): String {
-        val keywords = listOf("내비", "길 안내", "목적지", "안내해줘", "안내", "로", "까지", "에")
+        val keywords = listOf(
+            "내비게이션", "내비", "길 안내", "길안내", "목적지", "안내해줘", "안내해 줘", "안내",
+            "으로 가", "로 가", "까지 가", "에 가",
+        )
         var cleaned = text
         keywords.forEach { key ->
             cleaned = cleaned.replace(key, " ", ignoreCase = true)
         }
-        return cleaned.trim().ifBlank { text }
+        return cleaned.replace(Regex("\\s+"), " ").trim().ifBlank { text.trim() }
     }
 
     private fun extractPhone(text: String): String? {

@@ -1,17 +1,26 @@
 package com.myt.phase2
 
-/**
- * M33 — push notification channel stub (FCM/APNs later).
- */
+import com.myt.domain.model.NotificationCategory
+
 interface PushNotifier {
-    suspend fun notify(title: String, body: String): Result<Unit>
+    suspend fun notify(
+        title: String,
+        body: String,
+        category: NotificationCategory = NotificationCategory.Automation,
+        route: String? = null,
+    ): Result<Unit>
 }
 
 class LogPushNotifier(
     private val log: (String) -> Unit = {},
 ) : PushNotifier {
-    override suspend fun notify(title: String, body: String): Result<Unit> {
-        log("push: $title — $body")
+    override suspend fun notify(
+        title: String,
+        body: String,
+        category: NotificationCategory,
+        route: String?,
+    ): Result<Unit> {
+        log("push[$category]: $title — $body route=$route")
         return Result.success(Unit)
     }
 }

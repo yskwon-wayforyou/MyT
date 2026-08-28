@@ -9,13 +9,10 @@ data class LiveMapMarker(
     /** car | camera | dest | poi */
     val kind: String,
     val label: String? = null,
+    val id: String? = null,
+    val highlighted: Boolean = false,
 )
 
-/**
- * Live vehicle-centered map (~radiusMeters visible).
- * Android: OSM Leaflet WebView (streets, buildings, labels).
- * iOS: canvas schematic fallback until MapKit/OSM is wired.
- */
 @Composable
 expect fun LiveMapView(
     latitude: Double?,
@@ -23,5 +20,6 @@ expect fun LiveMapView(
     headingDegrees: Float? = null,
     radiusMeters: Int = 750,
     markers: List<LiveMapMarker> = emptyList(),
+    highlightPulse: Float = 1f,
     modifier: Modifier = Modifier,
 )

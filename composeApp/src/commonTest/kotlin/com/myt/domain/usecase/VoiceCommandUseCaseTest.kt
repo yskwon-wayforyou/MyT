@@ -166,6 +166,8 @@ private object ThrowingSettings : SettingsRepository {
     override suspend fun setDarkTheme(enabled: Boolean) = error("unused")
     override suspend fun isDriveSafetyAcknowledged(): Boolean = error("unused")
     override suspend fun setDriveSafetyAcknowledged(acknowledged: Boolean) = error("unused")
+    override suspend fun getNotificationPrefs() = com.myt.domain.model.NotificationPrefs()
+    override suspend fun setNotificationPrefs(prefs: com.myt.domain.model.NotificationPrefs) = error("unused")
 }
 
 private object ThrowingHistory : HistoryRepository {

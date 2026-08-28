@@ -36,9 +36,9 @@ class SpeedCamEngineTest {
     }
 
     @Test
-    fun calculateAlertLevel_returnsL2WhenNotSpeedingUnder100m() {
+    fun calculateAlertLevel_returnsL1WhenNotSpeedingUnder100m() {
         val camera = demoCamera(limit = 80)
-        assertEquals(AlertLevel.L2, engine.calculateAlertLevel(camera, 50.0, 70f))
+        assertEquals(AlertLevel.L1, engine.calculateAlertLevel(camera, 50.0, 70f))
     }
 
     @Test

@@ -69,6 +69,7 @@ import com.myt.domain.control.SelectingVehicleControlGateway
 import com.myt.domain.control.VehicleControlGateway
 import com.myt.domain.usecase.TelemetryUseCase
 import com.myt.domain.usecase.VoiceCommandUseCase
+import com.myt.domain.voice.VoiceFailureReporter
 import com.myt.platform.DeviceCommunications
 import com.myt.platform.PlatformDeviceCommunications
 import com.myt.platform.PlatformTextToSpeech
@@ -162,7 +163,8 @@ val domainModule = module {
     single<SpeechRecognizer> { SpeechPlatformRecognizer(get()) }
     single<TextToSpeech> { PlatformTextToSpeech(get()) }
     single<DeviceCommunications> { PlatformDeviceCommunications(get()) }
-    single { VoiceCommandUseCase(get(), get(), get(), get(), get(), get(), get()) }
+    single { VoiceFailureReporter(get(), get()) }
+    single { VoiceCommandUseCase(get(), get(), get(), get(), get(), get(), get(), get()) }
     single { HistoryUseCase(get()) }
     single { AdaptiveLayoutUseCase() }
     single { DriveSimController(get(), get(), get(), get()) }
@@ -181,8 +183,14 @@ val domainModule = module {
     single<ClimateScheduleRepository> { SettingsClimateScheduleRepository(get()) }
     single<PushNotifier> {
         val local = get<com.myt.platform.LocalNotificationPlatform>()
+        val settings = get<SettingsRepository>()
         local.ensureChannels()
-        InAppPushNotifier(localNotify = { title, body -> local.post(title, body) })
+        InAppPushNotifier(
+            settingsRepository = settings,
+            localNotify = { title, body, category, route ->
+                local.post(title, body, category, route)
+            },
+        )
     }
     single {
         LocalAutomationEngine(

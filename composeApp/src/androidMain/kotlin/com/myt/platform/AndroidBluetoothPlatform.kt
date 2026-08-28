@@ -85,6 +85,9 @@ actual class BluetoothPlatform actual constructor(context: Any) {
                             val match = TeslaBlePresence.matchesAdvertisementName(name)
                             if (match) {
                                 lastBleSeenMs = System.currentTimeMillis()
+                                if (_connectionState.value != BtConnectionState.Connected) {
+                                    com.myt.service.VehiclePresenceLauncher.onVehiclePresent(appContext)
+                                }
                                 _connectionState.value = BtConnectionState.Connected
                             }
                         }
@@ -106,7 +109,11 @@ actual class BluetoothPlatform actual constructor(context: Any) {
 
     private fun refreshPresence() {
         if (!hasBlePermission()) return
-        if (recentBleSighting() || BtConnectionHub.detectTeslaPresent()) {
+        val present = recentBleSighting() || BtConnectionHub.detectTeslaPresent()
+        if (present && _connectionState.value != BtConnectionState.Connected) {
+            com.myt.service.VehiclePresenceLauncher.onVehiclePresent(appContext)
+        }
+        if (present) {
             _connectionState.value = BtConnectionState.Connected
         } else if (_connectionState.value == BtConnectionState.Connected && !recentBleSighting()) {
             _connectionState.value = BtConnectionState.Disconnected

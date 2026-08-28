@@ -89,9 +89,25 @@ class KtorFleetRepository(
         runCatching {
             requireCall(FleetCallCategory.Command)
             val token = resolveAccessToken()
-            val result = runCatching { fleetApi.sendNavigationRequest(token, vin, destination) }
-            quota.record(FleetCallCategory.Command, result.isSuccess)
-            result.getOrThrow()
+            val first = runCatching { fleetApi.sendNavigationRequest(token, vin, destination) }
+            if (first.isSuccess) {
+                quota.record(FleetCallCategory.Command, true)
+                return@runCatching
+            }
+            val error = first.exceptionOrNull()!!
+            if (!shouldWake(error)) {
+                quota.record(FleetCallCategory.Command, false)
+                throw error
+            }
+            requireCall(FleetCallCategory.Wake)
+            val woke = runCatching { fleetApi.wakeUp(token, vin) }
+            quota.record(FleetCallCategory.Wake, woke.isSuccess)
+            woke.getOrThrow()
+            delay(2_500)
+            requireCall(FleetCallCategory.Command)
+            val second = runCatching { fleetApi.sendNavigationRequest(token, vin, destination) }
+            quota.record(FleetCallCategory.Command, second.isSuccess)
+            second.getOrThrow()
         }
 
     override suspend fun sendVehicleCommand(

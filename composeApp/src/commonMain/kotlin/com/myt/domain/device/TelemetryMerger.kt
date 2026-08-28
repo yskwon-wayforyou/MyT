@@ -8,6 +8,8 @@ object TelemetryMerger {
     const val FRESH_MS = 3_000L
     const val DEGRADED_MS = 5_000L
     private const val SPEED_EMA_ALPHA = 0.35f
+    private const val SPEED_EMA_SLOW_ALPHA = 0.85f
+    private const val STOP_THRESHOLD_KMH = 1.5f
 
     fun merge(
         fleet: GaugeState,
@@ -39,7 +41,9 @@ object TelemetryMerger {
         }
 
         if (!useDeviceSpeed) {
+            val fleetSpeed = if (fleet.speedKmh <= STOP_THRESHOLD_KMH) 0f else fleet.speedKmh
             return locationFill.copy(
+                speedKmh = fleetSpeed,
                 speedSource = if (fleet.speedKmh > 0f || fleet.lastUpdated > 0L) {
                     TelemetrySource.Fleet
                 } else {
@@ -58,7 +62,22 @@ object TelemetryMerger {
             return locationFill.copy(speedSource = TelemetrySource.Fleet)
         }
 
-        val smoothed = previousSpeedKmh * (1f - SPEED_EMA_ALPHA) + deviceFix.speedKmh * SPEED_EMA_ALPHA
+        // Immediate stop — avoid 4–10 km/h ghost speed at traffic lights.
+        if (deviceFix.speedKmh <= STOP_THRESHOLD_KMH) {
+            return locationFill.copy(
+                speedKmh = 0f,
+                latitude = deviceFix.latitude,
+                longitude = deviceFix.longitude,
+                headingDegrees = deviceFix.headingDegrees ?: fleet.headingDegrees,
+                speedSource = source,
+                locationSource = source,
+                lastUpdated = maxOf(fleet.lastUpdated, deviceFix.timestampMs),
+            )
+        }
+
+        val decelerating = deviceFix.speedKmh < previousSpeedKmh - 2f
+        val alpha = if (decelerating) SPEED_EMA_SLOW_ALPHA else SPEED_EMA_ALPHA
+        val smoothed = previousSpeedKmh * (1f - alpha) + deviceFix.speedKmh * alpha
         return locationFill.copy(
             speedKmh = smoothed.coerceAtLeast(0f),
             latitude = deviceFix.latitude,

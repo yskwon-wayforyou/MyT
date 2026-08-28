@@ -29,6 +29,7 @@ actual fun LiveMapView(
     headingDegrees: Float?,
     radiusMeters: Int,
     markers: List<LiveMapMarker>,
+    highlightPulse: Float,
     modifier: Modifier,
 ) {
     if (latitude == null || longitude == null) {

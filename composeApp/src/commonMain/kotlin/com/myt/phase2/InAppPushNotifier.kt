@@ -1,5 +1,8 @@
 package com.myt.phase2
 
+import com.myt.domain.model.NotificationCategory
+import com.myt.domain.model.NotificationPrefs
+import com.myt.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -9,10 +12,6 @@ data class InAppToast(
     val body: String,
 )
 
-/**
- * CommonMain toast bus — UI collects and shows snackbars.
- * Android can also mirror to NotificationManager via [LocalNotificationPlatform].
- */
 object InAppToastBus {
     private val _toasts = MutableSharedFlow<InAppToast>(extraBufferCapacity = 8)
     val toasts: SharedFlow<InAppToast> = _toasts.asSharedFlow()
@@ -23,11 +22,25 @@ object InAppToastBus {
 }
 
 class InAppPushNotifier(
-    private val localNotify: (title: String, body: String) -> Unit = { _, _ -> },
+    private val settingsRepository: SettingsRepository,
+    private val localNotify: (title: String, body: String, category: NotificationCategory, route: String?) -> Unit = { _, _, _, _ -> },
 ) : PushNotifier {
-    override suspend fun notify(title: String, body: String): Result<Unit> {
+    override suspend fun notify(
+        title: String,
+        body: String,
+        category: NotificationCategory,
+        route: String?,
+    ): Result<Unit> {
+        val prefs = settingsRepository.getNotificationPrefs()
+        val allowed = when (category) {
+            NotificationCategory.Control -> prefs.controlEnabled
+            NotificationCategory.Charge -> prefs.chargeEnabled
+            NotificationCategory.Automation -> prefs.automationEnabled
+            NotificationCategory.SpeedCam -> prefs.speedCamEnabled
+        }
+        if (!allowed) return Result.success(Unit)
         InAppToastBus.emit(title, body)
-        runCatching { localNotify(title, body) }
+        runCatching { localNotify(title, body, category, route) }
         return Result.success(Unit)
     }
 }

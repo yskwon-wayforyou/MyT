@@ -87,8 +87,8 @@ actual class DeviceLocationPlatform actual constructor(context: Any) {
         locationManager.getLastKnownLocation(provider)?.let { trySend(it.toDeviceFix()) }
         locationManager.requestLocationUpdates(
             provider,
-            500L,
-            0.5f,
+            100L,
+            0f,
             listener,
             Looper.getMainLooper(),
         )

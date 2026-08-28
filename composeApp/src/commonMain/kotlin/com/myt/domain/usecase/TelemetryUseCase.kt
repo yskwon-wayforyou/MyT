@@ -78,16 +78,26 @@ class TelemetryUseCase(
         republish(lastBtConnected)
     }
 
+    private var lastGear: Gear? = null
+    private var lastSleeping: Boolean = true
+    private var activeVin: String = ""
+
     fun startPolling(scope: CoroutineScope, config: VehicleConfig) {
+        activeVin = config.vin
         pollingJob?.cancel()
         deviceJob?.cancel()
         btJob?.cancel()
 
         btJob = scope.launch {
             bluetoothRepository.isConnected.collect { bt ->
+                val wasBt = lastBtConnected
                 lastBtConnected = bt
                 syncDeviceUpdates(bt)
                 republish(bt)
+                if (bt && !wasBt && activeVin.isNotBlank()) {
+                    debugLogger.i("Telemetry", "BT connected — immediate Fleet refresh")
+                    refreshOnce(activeVin)
+                }
             }
         }
 
@@ -182,6 +192,8 @@ class TelemetryUseCase(
                         "Telemetry",
                         "Fleet fetch ok speed=${state.speedKmh.toInt()} gear=${state.gear} soc=${state.socPercent.toInt()}",
                     )
+                    val wokeUp = lastSleeping && !state.isSleeping
+                    val startedDrive = lastGear == Gear.PARK && state.gear == Gear.DRIVE
                     fleetBase = state.copy(
                         bluetoothPresent = btConnected,
                         connection = when {
@@ -190,6 +202,11 @@ class TelemetryUseCase(
                         },
                     ).let(::retainLocation)
                     val merged = republish(btConnected)
+                    if (wokeUp || startedDrive) {
+                        debugLogger.i("Telemetry", "Vehicle state transition — UI refreshed (sleep→wake or P→D)")
+                    }
+                    lastSleeping = state.isSleeping
+                    lastGear = state.gear
                     tripRecorder.onGaugeUpdate(merged, config.vin)
                     chargeSessionRecorder.onGaugeUpdate(merged, config.vin)
                 }.onFailure { error ->
@@ -425,7 +442,7 @@ class TelemetryUseCase(
     private fun pollingInterval(state: GaugeState, config: VehicleConfig, btConnected: Boolean): Long = when {
         state.connection == ConnectionStatus.QuotaHold -> 15 * 60_000L
         state.connection == ConnectionStatus.Error -> 60_000L
-        state.isSleeping -> config.pollingIntervalSleepMs
+        state.isSleeping -> if (btConnected) 60_000L else config.pollingIntervalSleepMs
         state.charging?.isCharging == true -> {
             val limit = state.charging.chargeLimitPercent
             val soc = state.socPercent

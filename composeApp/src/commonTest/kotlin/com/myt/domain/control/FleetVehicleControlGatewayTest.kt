@@ -70,7 +70,12 @@ class FleetVehicleControlGatewayTest {
 }
 
 private object NoopPush : PushNotifier {
-    override suspend fun notify(title: String, body: String): Result<Unit> = Result.success(Unit)
+    override suspend fun notify(
+        title: String,
+        body: String,
+        category: com.myt.domain.model.NotificationCategory,
+        route: String?,
+    ): Result<Unit> = Result.success(Unit)
 }
 
 /** Minimal stub — only sendVehicleCommand overridden in tests. */

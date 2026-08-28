@@ -10,6 +10,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -40,6 +41,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.StrokeCap
+import kotlin.math.min
 import com.myt.domain.UnitConverter
 import com.myt.domain.model.AlertLevel
 import com.myt.domain.model.SpeedCamAlert
@@ -194,6 +200,109 @@ fun SpeedCamVisualAlert(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun SpeedCamGaugeLayer(
+    alert: SpeedCamAlert?,
+    useKmh: Boolean,
+    visualBoost: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    AnimatedVisibility(
+        visible = alert != null,
+        enter = fadeIn(tween(180)),
+        exit = fadeOut(tween(200)),
+        modifier = modifier,
+    ) {
+        val current = alert ?: return@AnimatedVisibility
+        val accent = alertAccent(current.level)
+        val pulseMs = when (current.level) {
+            AlertLevel.L3 -> if (visualBoost) 320 else 480
+            AlertLevel.L2 -> if (visualBoost) 480 else 650
+            else -> if (visualBoost) 650 else 900
+        }
+        val transition = rememberInfiniteTransition(label = "gaugeCamPulse")
+        val pulse by transition.animateFloat(
+            initialValue = 0.35f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(tween(pulseMs, easing = LinearEasing), RepeatMode.Reverse),
+            label = "pulse",
+        )
+        Box(modifier = Modifier.fillMaxSize()) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            accent.copy(alpha = 0.05f + pulse * 0.08f),
+                            accent.copy(alpha = 0.18f + pulse * 0.22f),
+                            accent.copy(alpha = 0.32f + pulse * 0.15f),
+                        ),
+                        center = center,
+                        radius = size.maxDimension * 0.72f,
+                    ),
+                    radius = size.maxDimension * 0.72f,
+                    center = center,
+                )
+            }
+            SpeedLimitArcMarker(
+                limitKmh = current.camera.speedLimitKmh,
+                maxKmh = if (useKmh) 160f else 100f,
+                modifier = Modifier.fillMaxSize().padding(4.dp),
+            )
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(bottom = 18.dp, start = 12.dp, end = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    "${current.distanceM}m",
+                    color = Color.White,
+                    fontSize = if (visualBoost) 28.sp else 24.sp,
+                    fontWeight = FontWeight.Black,
+                )
+                Text(
+                    "제한 ${current.camera.speedLimitKmh} ${UnitConverter.speedUnitLabel(useKmh)}",
+                    color = Color(0xFFFF3B30),
+                    fontSize = if (visualBoost) 22.sp else 19.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+                if (current.level == AlertLevel.L3) {
+                    Text(
+                        "현재 ${UnitConverter.formatSpeed(current.currentSpeedKmh, useKmh)} ${UnitConverter.speedUnitLabel(useKmh)}",
+                        color = Color.White.copy(alpha = 0.9f),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SpeedLimitArcMarker(limitKmh: Int, maxKmh: Float, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val strokeW = size.minDimension * 0.055f
+        val pad = size.minDimension * 0.07f
+        val diameter = min(size.width, size.height) - pad * 2
+        val topLeft = Offset((size.width - diameter) / 2f, (size.height - diameter) / 2f)
+        val arcSize = Size(diameter, diameter)
+        val fraction = (limitKmh / maxKmh).coerceIn(0f, 1f)
+        val markerAngle = 140f + 260f * fraction
+        val sweep = 8f
+        drawArc(
+            color = Color(0xFFFF3B30),
+            startAngle = markerAngle - sweep / 2f,
+            sweepAngle = sweep,
+            useCenter = false,
+            topLeft = topLeft,
+            size = arcSize,
+            style = Stroke(width = strokeW * 1.6f, cap = StrokeCap.Round),
+        )
     }
 }
 

@@ -1,6 +1,7 @@
 package com.myt.data.settings
 
 import com.myt.domain.model.GaugeDisplayPrefs
+import com.myt.domain.model.NotificationPrefs
 import com.myt.domain.repository.SettingsRepository
 import com.russhwolf.settings.Settings
 import kotlinx.serialization.json.Json
@@ -53,6 +54,16 @@ class SettingsRepositoryImpl(
         settings.putBoolean(KEY_DRIVE_SAFETY, acknowledged)
     }
 
+    override suspend fun getNotificationPrefs(): NotificationPrefs {
+        val raw = settings.getStringOrNull(KEY_NOTIFICATION_PREFS) ?: return NotificationPrefs()
+        return runCatching { json.decodeFromString(NotificationPrefs.serializer(), raw) }
+            .getOrElse { NotificationPrefs() }
+    }
+
+    override suspend fun setNotificationPrefs(prefs: NotificationPrefs) {
+        settings.putString(KEY_NOTIFICATION_PREFS, json.encodeToString(NotificationPrefs.serializer(), prefs))
+    }
+
     companion object {
         private const val KEY_VIN = "vin"
         private const val KEY_SPEED_KMH = "speed_unit_kmh"
@@ -60,5 +71,6 @@ class SettingsRepositoryImpl(
         private const val KEY_GAUGE_PREFS = "gauge_display_prefs_v1"
         private const val KEY_DARK_THEME = "dark_theme_v1"
         private const val KEY_DRIVE_SAFETY = "drive_safety_ack_v1"
+        private const val KEY_NOTIFICATION_PREFS = "notification_prefs_v1"
     }
 }

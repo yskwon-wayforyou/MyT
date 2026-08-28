@@ -11,23 +11,31 @@ import com.myt.R
 internal object MapMarkerIcons {
     fun vehicleIcon(context: Context, headingDegrees: Float?): Drawable {
         val drawable = requireNotNull(ContextCompat.getDrawable(context, R.drawable.ic_map_vehicle))
-        val sizePx = (32 * context.resources.displayMetrics.density).toInt().coerceAtLeast(24)
+        val sizePx = (36 * context.resources.displayMetrics.density).toInt().coerceAtLeast(28)
         val bitmap = drawable.toBitmap(sizePx, sizePx)
-        return BitmapDrawable(context.resources, bitmap).apply {
-            if (headingDegrees != null) {
-                // osmdroid Marker.rotation handles heading; keep drawable upright.
-            }
-        }
+        return BitmapDrawable(context.resources, bitmap)
     }
 
-    fun cameraIcon(context: Context): Drawable {
+    fun cameraIcon(context: Context, highlighted: Boolean = false, scale: Float = 1f): Drawable {
         val drawable = requireNotNull(ContextCompat.getDrawable(context, R.drawable.ic_map_speed_camera))
-        val sizePx = (32 * context.resources.displayMetrics.density).toInt().coerceAtLeast(28)
-        return BitmapDrawable(context.resources, drawable.toBitmap(sizePx, sizePx))
+        val basePx = (if (highlighted) 40 else 34) * context.resources.displayMetrics.density
+        val sizePx = (basePx * scale).toInt().coerceAtLeast(28)
+        val bitmap = drawable.toBitmap(sizePx, sizePx)
+        if (!highlighted) return BitmapDrawable(context.resources, bitmap)
+        val glow = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(glow)
+        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.parseColor("#FFFF3B30")
+            style = android.graphics.Paint.Style.STROKE
+            strokeWidth = sizePx * 0.12f
+        }
+        canvas.drawCircle(sizePx / 2f, sizePx / 2f, sizePx / 2.2f, paint)
+        canvas.drawBitmap(bitmap, 0f, 0f, null)
+        return BitmapDrawable(context.resources, glow)
     }
 
     fun destIcon(context: Context): Drawable {
-        val sizePx = (22 * context.resources.displayMetrics.density).toInt().coerceAtLeast(18)
+        val sizePx = (26 * context.resources.displayMetrics.density).toInt().coerceAtLeast(20)
         val bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {

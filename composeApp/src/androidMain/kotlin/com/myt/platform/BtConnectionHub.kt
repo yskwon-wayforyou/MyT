@@ -16,6 +16,8 @@ object BtConnectionHub {
     private val listeners = mutableSetOf<(Boolean) -> Unit>()
     @Volatile
     private var appContext: Context? = null
+    @Volatile
+    private var lastPresent: Boolean = false
 
     fun attach(context: Context) {
         appContext = context.applicationContext
@@ -33,10 +35,9 @@ object BtConnectionHub {
     fun onAclEvent(connected: Boolean, deviceName: String? = null) {
         if (connected) {
             if (deviceName == null || TeslaBlePresence.matchesAdvertisementName(deviceName)) {
-                listeners.forEach { it(true) }
+                notifyPresent(true)
             }
         } else {
-            // Re-evaluate; may still have GATT/BLE presence.
             emitCurrent()
         }
     }
@@ -47,6 +48,17 @@ object BtConnectionHub {
 
     fun emitCurrent() {
         val present = detectTeslaPresent()
+        notifyPresent(present)
+    }
+
+    private fun notifyPresent(present: Boolean) {
+        val wasPresent = lastPresent
+        lastPresent = present
+        if (present && !wasPresent) {
+            appContext?.let { ctx ->
+                com.myt.service.VehiclePresenceLauncher.onVehiclePresent(ctx)
+            }
+        }
         listeners.forEach { it(present) }
     }
 

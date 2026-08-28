@@ -33,10 +33,14 @@ class VoiceNavUseCase(
 
     suspend fun sendDestination(destination: String): VoiceNavResult {
         val vin = settingsRepository.getVin()
-            ?: return VoiceNavResult.Failed("VIN not configured")
-        return fleetRepository.sendNavigationRequest(vin, destination).fold(
+            ?: return VoiceNavResult.Failed("VIN이 설정되지 않았습니다. 설정에서 차량을 선택해 주세요.")
+        val cleaned = destination.trim()
+        if (cleaned.length < 2) {
+            return VoiceNavResult.Failed("목적지를 다시 말씀해 주세요. 예) 「수원역으로 안내해줘」")
+        }
+        return fleetRepository.sendNavigationRequest(vin, cleaned).fold(
             onSuccess = { VoiceNavResult.Sent },
-            onFailure = { VoiceNavResult.Failed(it.message ?: "Navigation request failed") },
+            onFailure = { VoiceNavResult.Failed(it.message ?: "내비게이션 요청에 실패했습니다") },
         )
     }
 }

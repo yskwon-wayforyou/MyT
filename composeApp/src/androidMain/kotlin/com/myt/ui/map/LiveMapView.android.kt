@@ -18,6 +18,8 @@ import com.myt.ui.UiLabels
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
+import kotlin.math.cos
+import kotlin.math.sin
 
 @Composable
 actual fun LiveMapView(
@@ -26,18 +28,25 @@ actual fun LiveMapView(
     headingDegrees: Float?,
     radiusMeters: Int,
     markers: List<LiveMapMarker>,
+    highlightPulse: Float,
     modifier: Modifier,
 ) {
     Box(modifier = modifier.background(Color(0xFF0A1018))) {
         if (latitude != null && longitude != null) {
+            val heading = headingDegrees ?: 0f
             val zoom = remember(latitude, radiusMeters) {
                 zoomForRadiusMeters(latitude, radiusMeters).toDouble()
             }
-            val markerSignature = remember(markers) {
-                markers.joinToString("|") { "${it.kind}:${"%.5f".format(it.latitude)}:${"%.5f".format(it.longitude)}" }
+            val offsetCenter = remember(latitude, longitude, heading, radiusMeters) {
+                offsetCenterPoint(latitude, longitude, heading, radiusMeters * 0.22)
             }
-            val mapKey = remember(latitude, longitude, radiusMeters, markerSignature, headingDegrees) {
-                "${"%.5f".format(latitude)}:${"%.5f".format(longitude)}:$radiusMeters:$markerSignature:${headingDegrees ?: 0f}"
+            val markerSignature = remember(markers, highlightPulse) {
+                markers.joinToString("|") {
+                    "${it.kind}:${it.id}:${it.highlighted}:${"%.5f".format(it.latitude)}:${"%.5f".format(it.longitude)}"
+                } + ":p$highlightPulse"
+            }
+            val mapKey = remember(offsetCenter, radiusMeters, markerSignature, heading) {
+                "${"%.5f".format(offsetCenter.first)}:${"%.5f".format(offsetCenter.second)}:$radiusMeters:$markerSignature:$heading"
             }
             AndroidView(
                 modifier = Modifier.fillMaxSize(),
@@ -49,14 +58,14 @@ actual fun LiveMapView(
                         setBuiltInZoomControls(false)
                         setTilesScaledToDpi(true)
                         controller.setZoom(zoom)
-                        controller.setCenter(GeoPoint(latitude, longitude))
                         tag = mapKey
                         onResume()
                     }
                 },
                 update = { mapView ->
                     mapView.controller.setZoom(zoom)
-                    mapView.controller.setCenter(GeoPoint(latitude, longitude))
+                    mapView.mapOrientation = -heading
+                    mapView.controller.setCenter(GeoPoint(offsetCenter.first, offsetCenter.second))
                     if (mapView.tag != mapKey) {
                         mapView.tag = mapKey
                         mapView.overlays.clear()
@@ -65,9 +74,12 @@ actual fun LiveMapView(
                         mapView = mapView,
                         latitude = latitude,
                         longitude = longitude,
-                        headingDegrees = headingDegrees,
+                        headingDegrees = heading,
+                        mapRotated = true,
                         markers = markers,
+                        highlightPulse = highlightPulse,
                     )
+                    mapView.invalidate()
                 },
                 onRelease = { mapView ->
                     mapView.onPause()
@@ -98,12 +110,29 @@ actual fun LiveMapView(
     }
 }
 
+/** Shift map center backward so the vehicle sits ~2/3 from the top (more road ahead visible). */
+internal fun offsetCenterPoint(
+    lat: Double,
+    lng: Double,
+    headingDegrees: Float,
+    offsetMeters: Double,
+): Pair<Double, Double> {
+    val backHeadingRad = Math.toRadians((headingDegrees + 180f).toDouble())
+    val dNorth = offsetMeters * cos(backHeadingRad)
+    val dEast = offsetMeters * sin(backHeadingRad)
+    val dLat = dNorth / 111_320.0
+    val dLng = dEast / (111_320.0 * cos(Math.toRadians(lat)))
+    return lat + dLat to lng + dLng
+}
+
 private fun rebuildMarkers(
     mapView: MapView,
     latitude: Double,
     longitude: Double,
     headingDegrees: Float?,
+    mapRotated: Boolean,
     markers: List<LiveMapMarker>,
+    highlightPulse: Float,
 ) {
     mapView.overlays.clear()
     mapView.overlays.add(
@@ -111,21 +140,21 @@ private fun rebuildMarkers(
             position = GeoPoint(latitude, longitude)
             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
             setFlat(true)
-            icon = MapMarkerIcons.vehicleIcon(mapView.context, headingDegrees)
-            // Icon points north (up); rotation is clockwise degrees from north.
-            rotation = headingDegrees ?: 0f
+            icon = MapMarkerIcons.vehicleIcon(mapView.context, if (mapRotated) null else headingDegrees)
+            rotation = if (mapRotated) 0f else headingDegrees ?: 0f
             title = "차량"
         },
     )
     markers.forEach { m ->
+        val scale = if (m.highlighted) 1.15f + 0.2f * highlightPulse else 1f
         mapView.overlays.add(
             Marker(mapView).apply {
                 position = GeoPoint(m.latitude, m.longitude)
                 setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                 icon = when (m.kind) {
-                    "camera" -> MapMarkerIcons.cameraIcon(mapView.context)
+                    "camera" -> MapMarkerIcons.cameraIcon(mapView.context, highlighted = m.highlighted, scale = scale)
                     "dest" -> MapMarkerIcons.destIcon(mapView.context)
-                    else -> MapMarkerIcons.cameraIcon(mapView.context)
+                    else -> MapMarkerIcons.cameraIcon(mapView.context, highlighted = m.highlighted, scale = scale)
                 }
                 title = m.label
             },

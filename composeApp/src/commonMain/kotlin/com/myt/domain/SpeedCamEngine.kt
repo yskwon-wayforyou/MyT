@@ -29,9 +29,12 @@ class SpeedCamEngine(
             return null
         }
 
-        val candidates = filterByDirection(nearby, heading)
+        val candidates = nearby
             .map { camera -> camera to haversineDistanceM(lat, lng, camera.latitude, camera.longitude) }
             .filter { (_, distance) -> distance <= QUERY_RADIUS_M }
+            .filter { (camera, distance) ->
+                SpeedCamMatcher.isAheadOnRoute(lat, lng, heading, camera, distance)
+            }
             .sortedBy { (_, distance) -> distance }
 
         val (camera, distance) = candidates.firstOrNull() ?: run {
@@ -93,20 +96,20 @@ class SpeedCamEngine(
         distanceM: Double,
         speedKmh: Float,
     ): AlertLevel? = when {
-        distanceM > 500 -> null
+        distanceM > QUERY_RADIUS_M -> null
         distanceM > 300 -> AlertLevel.L1
-        distanceM > 100 -> AlertLevel.L2
+        distanceM > 100 -> if (speedKmh > camera.speedLimitKmh) AlertLevel.L2 else AlertLevel.L1
         speedKmh > camera.speedLimitKmh -> AlertLevel.L3
-        else -> AlertLevel.L2
+        else -> AlertLevel.L1
     }
 
+    @Deprecated("Use SpeedCamMatcher.isAheadOnRoute", ReplaceWith("SpeedCamMatcher.isAheadOnRoute(lat, lng, heading, camera, distance)"))
     internal fun filterByDirection(
         cameras: List<SpeedCamera>,
         heading: Float,
     ): List<SpeedCamera> = cameras.filter { camera ->
         val direction = camera.roadDirection ?: return@filter true
-        val diff = angleDifference(direction, heading)
-        diff <= DIRECTION_TOLERANCE_DEG
+        SpeedCamMatcher.angleDifference(direction, heading) <= DIRECTION_TOLERANCE_DEG
     }
 
     private fun buildMessage(
@@ -134,11 +137,6 @@ class SpeedCamEngine(
             cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) * sin(dLng / 2).pow(2)
         val c = 2 * atan2(sqrt(a), sqrt(1 - a))
         return r * c
-    }
-
-    private fun angleDifference(a: Float, b: Float): Float {
-        val diff = ((a - b + 540) % 360) - 180
-        return kotlin.math.abs(diff)
     }
 
     companion object {

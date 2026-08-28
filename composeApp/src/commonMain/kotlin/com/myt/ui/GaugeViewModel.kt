@@ -404,10 +404,12 @@ class GaugeViewModel(
         val cameras = poiRepository.findNearbyCameras(display.first, display.second, radius)
         val markers = cameras.map { cam ->
             LiveMapMarker(
+                id = cam.id,
                 latitude = cam.latitude,
                 longitude = cam.longitude,
                 kind = "camera",
                 label = "${cam.speedLimitKmh} · ${cam.roadName ?: "단속"}",
+                highlighted = alert?.camera?.id == cam.id,
             )
         }.toMutableList()
         val nav = state.navigation

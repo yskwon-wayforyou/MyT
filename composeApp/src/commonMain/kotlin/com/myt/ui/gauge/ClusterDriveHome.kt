@@ -61,7 +61,7 @@ import androidx.compose.runtime.LaunchedEffect
 import com.myt.ui.UiLabels
 import com.myt.ui.map.LiveMapMarker
 import com.myt.ui.map.LiveMapView
-import com.myt.ui.speedcam.SpeedCamOverlay
+import com.myt.ui.speedcam.SpeedCamGaugeLayer
 import com.myt.ui.theme.GaugeTheme
 import kotlin.math.cos
 import kotlin.math.min
@@ -131,7 +131,7 @@ fun ClusterDriveHome(
                             chargingMode = chargingMode,
                             modifier = Modifier.fillMaxSize(),
                         )
-                        SpeedCamOverlay(
+                        SpeedCamGaugeLayer(
                             alert = alert,
                             useKmh = useKmh,
                             visualBoost = state.isSimulated,
@@ -172,7 +172,7 @@ fun ClusterDriveHome(
                             chargingMode = chargingMode,
                             modifier = Modifier.fillMaxSize(),
                         )
-                        SpeedCamOverlay(
+                        SpeedCamGaugeLayer(
                             alert = alert,
                             useKmh = useKmh,
                             visualBoost = state.isSimulated,
@@ -705,6 +705,13 @@ private fun MapGuidanceContent(
     }
     val mapLat = mapDisplayLatitude ?: state.latitude
     val mapLng = mapDisplayLongitude ?: state.longitude
+    val pulseTransition = rememberInfiniteTransition(label = "camBlink")
+    val highlightPulse by pulseTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(600, easing = LinearEasing), RepeatMode.Reverse),
+        label = "camBlinkPhase",
+    )
     Box(modifier = Modifier.fillMaxSize()) {
         LiveMapView(
             latitude = mapLat,
@@ -712,6 +719,7 @@ private fun MapGuidanceContent(
             headingDegrees = state.headingDegrees,
             radiusMeters = radius,
             markers = mapMarkers,
+            highlightPulse = highlightPulse,
             modifier = Modifier.fillMaxSize(),
         )
         GuidanceOverlay(

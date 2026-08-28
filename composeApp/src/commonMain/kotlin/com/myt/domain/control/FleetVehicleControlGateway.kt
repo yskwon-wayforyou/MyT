@@ -3,6 +3,8 @@ package com.myt.domain.control
 import com.myt.domain.repository.FleetRepository
 import com.myt.domain.repository.TokenRepository
 import com.myt.domain.usecase.TelemetryUseCase
+import com.myt.navigation.MyTRoutes
+import com.myt.domain.model.NotificationCategory
 import com.myt.phase2.PushNotifier
 
 /**
@@ -23,12 +25,12 @@ class FleetVehicleControlGateway(
         )
         return result.fold(
             onSuccess = {
-                pushNotifier.notify("MyT 제어", "${label(request.command)} 전송됨")
+                pushNotifier.notify("MyT 제어", "${label(request.command)} 전송됨", NotificationCategory.Control, MyTRoutes.GAUGE)
                 ControlResult.Accepted
             },
             onFailure = { error ->
                 val reason = humanize(error)
-                pushNotifier.notify("MyT 제어 실패", reason)
+                pushNotifier.notify("MyT 제어 실패", reason, NotificationCategory.Control, MyTRoutes.GAUGE)
                 ControlResult.Rejected(reason)
             },
         )

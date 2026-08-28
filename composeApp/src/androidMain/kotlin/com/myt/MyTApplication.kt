@@ -18,6 +18,10 @@ class MyTApplication : Application() {
         initializeOsmdroid(this)
         com.myt.platform.WidgetSnapshotPublisher.bind(this)
         runCatching {
+            val bt = org.koin.core.context.GlobalContext.get().get<com.myt.platform.BluetoothPlatform>()
+            bt.startMonitoring()
+        }
+        runCatching {
             org.koin.core.context.GlobalContext.get().get<CrashReporterPlatform>().install()
         }
         runCatching {

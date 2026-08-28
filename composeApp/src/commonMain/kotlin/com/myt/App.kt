@@ -20,6 +20,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.myt.domain.history.TripHistoryItem
+import com.myt.data.auth.DeepLinkBus
 import com.myt.phase2.InAppToastBus
 import com.myt.ui.AppStateMachine
 import com.myt.ui.GaugeViewModel
@@ -39,6 +40,7 @@ import com.myt.ui.onboarding.TeslaSplash
 import com.myt.ui.settings.SettingsScreen
 import com.myt.ui.theme.MyTTheme
 import com.myt.ui.voice.VoiceAssistantDialog
+import com.myt.navigation.MyTRoutes
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -80,6 +82,17 @@ fun App() {
                     if (AppStateMachine.shouldAutoOpenGauge(onboardingComplete, bluetoothPresent, isFleetConnected)) {
                         navController.navigate(Route.Gauge) {
                             launchSingleTop = true
+                        }
+                    }
+                }
+
+                LaunchedEffect(Unit) {
+                    DeepLinkBus.routes.collect { route ->
+                        when (route) {
+                            MyTRoutes.GAUGE ->
+                                navController.navigate(Route.Gauge) { launchSingleTop = true }
+                            MyTRoutes.SETTINGS ->
+                                navController.navigate(Route.Settings) { launchSingleTop = true }
                         }
                     }
                 }

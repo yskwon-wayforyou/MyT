@@ -1,6 +1,8 @@
 package com.myt.domain.control
 
 import com.myt.domain.usecase.TelemetryUseCase
+import com.myt.domain.model.NotificationCategory
+import com.myt.navigation.MyTRoutes
 import com.myt.phase2.PushNotifier
 
 /**
@@ -13,7 +15,12 @@ class DemoVehicleControlGateway(
 ) : VehicleControlGateway {
     override suspend fun execute(request: ControlRequest): ControlResult {
         telemetryUseCase.applyDemoControl(request.command)
-        pushNotifier.notify("MyT 제어", "${VehicleCommandLabels.ko(request.command)} 적용됨 (데모)")
+        pushNotifier.notify(
+            "MyT 제어",
+            "${VehicleCommandLabels.ko(request.command)} 적용됨 (데모)",
+            NotificationCategory.Control,
+            MyTRoutes.GAUGE,
+        )
         return ControlResult.Accepted
     }
 }

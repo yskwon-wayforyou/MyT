@@ -52,4 +52,6 @@ interface SettingsRepository {
     suspend fun setDarkTheme(enabled: Boolean)
     suspend fun isDriveSafetyAcknowledged(): Boolean
     suspend fun setDriveSafetyAcknowledged(acknowledged: Boolean)
+    suspend fun getNotificationPrefs(): com.myt.domain.model.NotificationPrefs
+    suspend fun setNotificationPrefs(prefs: com.myt.domain.model.NotificationPrefs)
 }

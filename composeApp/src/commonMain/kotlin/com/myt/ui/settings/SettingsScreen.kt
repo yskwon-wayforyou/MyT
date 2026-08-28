@@ -77,6 +77,7 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
 ) {
     val authUseCase = koinInject<AuthUseCase>()
+    val settingsRepository = koinInject<com.myt.domain.repository.SettingsRepository>()
     val voiceCommandUseCase = koinInject<VoiceCommandUseCase>()
     val batteryOptimization = koinInject<BatteryOptimizationPlatform>()
     val localNotify = koinInject<com.myt.platform.LocalNotificationPlatform>()
@@ -106,6 +107,11 @@ fun SettingsScreen(
     var haVinSuffix by remember { mutableStateOf(haConfig.vinSuffix) }
     var showSecret by remember { mutableStateOf(false) }
     var savedHint by remember { mutableStateOf<String?>(null) }
+    var notifyPrefs by remember { mutableStateOf(com.myt.domain.model.NotificationPrefs()) }
+
+    LaunchedEffect(Unit) {
+        notifyPrefs = settingsRepository.getNotificationPrefs()
+    }
 
     LaunchedEffect(teslaConfig) {
         appId = teslaConfig.appId
@@ -243,10 +249,45 @@ fun SettingsScreen(
                             fontSize = 15.sp,
                         )
                         Text(
-                            "로컬 시스템 알림을 사용합니다. FCM 원격 푸시는 Firebase 연동 후 같은 채널로 이어집니다. " +
-                                "제조사 절전·Doze에 막히지 않으려면 알림 허용과 배터리 예외를 함께 켜 주세요.",
+                            "로컬 시스템 알림을 사용합니다. 탭하면 앱이 열리고 관련 화면으로 이동합니다.",
                             color = colors.textSecondary,
                             fontSize = 12.sp,
+                        )
+                        PreferenceSwitch(
+                            title = "차량 제어 알림",
+                            checked = notifyPrefs.controlEnabled,
+                            onCheckedChange = { on ->
+                                val next = notifyPrefs.copy(controlEnabled = on)
+                                notifyPrefs = next
+                                scope.launch { settingsRepository.setNotificationPrefs(next) }
+                            },
+                        )
+                        PreferenceSwitch(
+                            title = "충전 알림",
+                            checked = notifyPrefs.chargeEnabled,
+                            onCheckedChange = { on ->
+                                val next = notifyPrefs.copy(chargeEnabled = on)
+                                notifyPrefs = next
+                                scope.launch { settingsRepository.setNotificationPrefs(next) }
+                            },
+                        )
+                        PreferenceSwitch(
+                            title = "자동화 알림",
+                            checked = notifyPrefs.automationEnabled,
+                            onCheckedChange = { on ->
+                                val next = notifyPrefs.copy(automationEnabled = on)
+                                notifyPrefs = next
+                                scope.launch { settingsRepository.setNotificationPrefs(next) }
+                            },
+                        )
+                        PreferenceSwitch(
+                            title = "단속 카메라 알림",
+                            checked = notifyPrefs.speedCamEnabled,
+                            onCheckedChange = { on ->
+                                val next = notifyPrefs.copy(speedCamEnabled = on)
+                                notifyPrefs = next
+                                scope.launch { settingsRepository.setNotificationPrefs(next) }
+                            },
                         )
                         Button(
                             onClick = {
@@ -284,7 +325,12 @@ fun SettingsScreen(
                         TextButton(
                             onClick = {
                                 scope.launch {
-                                    pushNotifier.notify("MyT 알림 테스트", "제어·충전·자동화 채널이 정상입니다.")
+                                    pushNotifier.notify(
+                                        "MyT 알림 테스트",
+                                        "탭하면 계기판으로 이동합니다.",
+                                        com.myt.domain.model.NotificationCategory.Automation,
+                                        com.myt.navigation.MyTRoutes.GAUGE,
+                                    )
                                     notifyHint = "테스트 알림을 보냈습니다. 알림창을 확인해 주세요."
                                 }
                             },

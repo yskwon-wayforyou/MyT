@@ -10,10 +10,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.myt.data.auth.DeepLinkBus
 import com.myt.data.auth.OAuthCallbackBus
 import com.myt.debug.DebugLogger
 import com.myt.domain.usecase.AuthUseCase
 import com.myt.domain.usecase.FleetQuotaUseCase
+import com.myt.platform.OrientationController
+import com.myt.service.VehiclePresenceLauncher
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
@@ -21,6 +24,7 @@ class MainActivity : ComponentActivity() {
     private val authUseCase: AuthUseCase by inject()
     private val quotaUseCase: FleetQuotaUseCase by inject()
     private val debugLogger: DebugLogger by inject()
+    private var orientationController: OrientationController? = null
 
     private val locationPermissions = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
@@ -41,6 +45,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        orientationController = OrientationController(this).also { it.start() }
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
             != android.content.pm.PackageManager.PERMISSION_GRANTED
         ) {
@@ -50,9 +55,16 @@ class MainActivity : ComponentActivity() {
         requestBluetoothPermissionsIfNeeded()
         requestNotificationPermissionIfNeeded()
         handleOAuthIntent(intent)
+        handleDeepLinkIntent(intent)
         setContent {
             App()
         }
+    }
+
+    override fun onDestroy() {
+        orientationController?.stop()
+        orientationController = null
+        super.onDestroy()
     }
 
     private fun requestNotificationPermissionIfNeeded() {
@@ -107,6 +119,15 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         handleOAuthIntent(intent)
+        handleDeepLinkIntent(intent)
+    }
+
+    private fun handleDeepLinkIntent(intent: Intent?) {
+        val route = intent?.getStringExtra(VehiclePresenceLauncher.EXTRA_ROUTE) ?: return
+        lifecycleScope.launch {
+            DeepLinkBus.emit(route)
+        }
+        intent.removeExtra(VehiclePresenceLauncher.EXTRA_ROUTE)
     }
 
     private fun handleOAuthIntent(intent: Intent?) {
